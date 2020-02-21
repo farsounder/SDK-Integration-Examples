@@ -22,22 +22,18 @@ void zeromq_free(void *data, void *hint) {
 
 // Unless you're sure you're reading smaller sized messages (ie- you're not
 // writing a general base level utility) you should use this function to parse
-// protobuf messages so that if you end up parsing something large (like
-// beamformed data) you'll be able to.
+// protobuf messages so that if you end up parsing something large you'll be
+// able to.
 //
 // See also:
 //  protos/protobuf-bin/include/google/protobuf/io/coded_stream.h's
 //  SetTotalBytesLimit function.
 template <class ProtoMessage>
 inline bool ParseLargeMessage(const void *data, int data_len, ProtoMessage *proto_msg) {
-
   google::protobuf::io::ArrayInputStream array_stream(data, data_len);
   google::protobuf::io::CodedInputStream coded_stream(&array_stream);
   coded_stream.SetTotalBytesLimit(kLargeMessageBytesLimit, kLargeMessageBytesWarningThreshold);
   bool success = proto_msg->ParseFromCodedStream(&coded_stream);
-                 
-  //if (!success)
-    //LOG_ERROR("ParseLargeMessage failed.");
   return success;
 }
 
@@ -50,11 +46,15 @@ bool ProtoMessageToZeromqMessage(
   // to the zeromq_message. It will take care of calling free().
   void *string = malloc(string_size);
   if (string == NULL) {
-    //LOG_ERROR("ProtoMessageToZeromqMessage failed during malloc.");
+    // ...
+    // handle / log error
+    // ...
     return false;
   }
   if (!proto_message.SerializeToArray(string, string_size)) {
-    //LOG_ERROR("ProtoMessageToZeromqMessage failed during serialization.");
+    // ...
+    // handle / log error
+    // ...
     free(string);
     return false;
   }
@@ -74,7 +74,9 @@ bool ZeromqMessageToProtoMessage(
     // up some bad dasta off a port - luckily Protobuf knows when the data is
     // terrible. If the message is too big we'll need to update the
     // ParseLargeMessage's size cutoffs.
-    //LOG_WARNING("ZMQ->Proto ParseFromString returned error. Dropping message");
+    // ...
+    // handle / log error
+    // ...
   }
   return success;
 }
