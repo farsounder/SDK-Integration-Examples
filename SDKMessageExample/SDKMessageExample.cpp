@@ -71,7 +71,7 @@ bool ZeromqMessageToProtoMessage(
     proto_message);
   if (!success) {
     // The message is garbage or too big. The garbage can happen if zeromq picks
-    // up some bad dasta off a port - luckily Protobuf knows when the data is
+    // up some bad data off a port - luckily Protobuf knows when the data is
     // terrible. If the message is too big we'll need to update the
     // ParseLargeMessage's size cutoffs.
     // ...
