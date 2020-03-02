@@ -1,5 +1,5 @@
 // FarSounder Navigation System API
-// Copyright (c) 2002 - 2017 FarSounder, Inc. All rights reserved.
+// Copyright FarSounder, Inc. All rights reserved.
 //
 // This work is an unpublished work and contains confidential,
 // proprietary and trade secret information of FarSounder, Inc.
@@ -159,6 +159,10 @@ message TargetData {
   // Unique string to identify the sonar this data came from.
   optional string serial = 2;
   // Heading and lat/lon position at time of data collection.
+  // Note that the position and heading displayed in the SonaSoft coning display
+  // may be updating a rate different from the ping rate. Further, this value
+  // is filtered if Settings -> System Settings -> "Filter heading and position"
+  // is checked.
   optional nav_info.Heading heading = 4;
   optional nav_info.Position position = 5;
   // The bottom (i.e. sea floor) is a collection of points arranged into a grid.
@@ -199,18 +203,7 @@ message Bin {
   optional float depth = 6;
   // Range normalized loudness of this point.
   optional float strength = 7;
-  // Some Bins are inferred from a time-based analysis of the data collected by
-  // the sonar. This is used to smooth out jitter from the dynamic ocean
-  // environments these sonars operate in. A confidence value of 1.0 signals
-  // that the bin has a 1:1 correspondence with a detection from the
-  // sonar. Values in the interval [0.0, 1.0) are inferred from the time based
-  // analysis and may not originate from an actual detection in this particular
-  // data collection.
-  //
-  // In particular, this time based analysis is used to stabilize the in-water
-  // targets detected by the sonar. More information about this stabilization
-  // can be found here:
-  // http://www.farsounder.com/technology/blog/target_stabilization
+  // This parameter is deprecated.
   optional float confidence = 8;
 }
 
@@ -230,12 +223,16 @@ enum FieldOfView {
   k90d330m = 2;   // 90 degree sector out to 330 meters range
   k60d440m = 3;   // 60 degree sector out to 440 meters range
   kAlt = 4;       // Alternate between k90d330m and k60d44m with each ping
-  // FarSounder-500 & FarSounder-1000 systems:
-  k90d100m = 5;   // 90 degree sector out to 100 meters range
-  k90d200m = 6;   // 90 degree sector out to 200 meters range
+  // Argos-500 & Argos-1000 systems:
+  k120d100m = 5;   // 120 degree sector out to 100 meters range
+  k120d200m = 6;   // 120 degree sector out to 200 meters range
   k90d500m = 7;   // 90 degree sector out to 500 meters range
-  // FarSounder-1000 systems only:
+  // Argos-1000 systems only:
   k60d1000m = 8;  // 60 degree sector out to 1000 meters range
+  // Argos-350 systems:
+  k90d100m = 9;
+  k90d200m = 10;
+  k90d350m = 11;
 }
 
 
@@ -252,8 +249,9 @@ enum FieldOfView {
 message ProcessorSettings {
   enum SystemType {
     kFS3DT = 0;  // FS-3DT sonar
-    kFS500 = 1;  // FarSounder-500 sonar
-    kFS1000 = 2;  // FarSounder-1000 sonar
+    kFS500 = 1;  // Argos-500 sonar
+    kFS1000 = 2;  // Argos-1000 sonar
+    kFS350 = 3; // Argos-350 sonar
   }
 
   optional time.Time time = 1;
