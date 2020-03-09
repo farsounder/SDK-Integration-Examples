@@ -81,6 +81,32 @@ bool ZeromqMessageToProtoMessage(
   return success;
 }
 
+template <class ProtoMessageRequest, class ProtoMessageResponse>
+void send_generic_request(
+    ProtoMessageRequest req, std::string port,
+    ProtoMessageResponse &res){
+  zmq::context_t context(1);
+  zmq::socket_t zmq_socket(context, ZMQ_REQ);
+  std::string address = "tcp://localhost:";
+  zmq_socket.connect(address + port);
+
+  // Proto request to zmq message
+  zmq::message_t update;
+  ProtoMessageToZeromqMessage(req, &update);
+  printf("Send request\n");
+  zmq_socket.send(update, 0);
+  printf("Check for response\n");
+  zmq_socket.recv(&update, 0);
+  // zmq response back to a proto message
+  ZeromqMessageToProtoMessage(update, &res);
+  printf("result=%d\n", res.result().code());
+  printf("res_detail=%s\n", res.result().result_detail().c_str());
+
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Examples
+
 void request_reply_example()
 {
   /////////////////////////////////////////////
@@ -105,6 +131,46 @@ void request_reply_example()
   ZeromqMessageToProtoMessage(update, &gpsResp);
   printf("result=%d\n", gpsResp.result().code());
   printf("system_type=%d\n",gpsResp.settings().system_type());
+}
+
+void toggle_bottom_detection(bool bottom_detect_on)
+{
+  std::string port = "60503";
+
+  proto::nav_api::SetBottomDetectionRequest bottom_detect_request;
+  proto::nav_api::SetBottomDetectionResponse bottom_detect_response;
+  bottom_detect_request.set_enable_bottom_detection(bottom_detect_on);
+  printf("bottom detect value: %d\n", bottom_detect_on);
+  send_generic_request(bottom_detect_request, port, bottom_detect_response);
+}
+
+void toggle_auto_squelch(bool auto_squelch_on) {
+  std::string port = "60505";
+
+  proto::nav_api::SetSquelchlessInWaterDetectorRequest request;
+  proto::nav_api::SetSquelchlessInWaterDetectorResponse response;
+  request.set_enable_squelchless_detection(auto_squelch_on);
+  printf("auto squelch value: %d\n", auto_squelch_on);
+  send_generic_request(request, port, response);
+}
+
+void set_squelch(float squelch) {
+  std::string port = "60504";
+
+  proto::nav_api::SetInWaterSquelchRequest request;
+  proto::nav_api::SetInWaterSquelchResponse response;
+  request.set_new_squelch_val(squelch);
+  printf("squelch value: %f\n", squelch);
+  send_generic_request(request, port, response);
+}
+
+void set_fov(proto::nav_api::FieldOfView new_fov) {
+  std::string port = "60502";
+  proto::nav_api::SetFieldOfViewRequest request;
+  proto::nav_api::SetFieldOfViewResponse response;
+  request.set_fov(new_fov);
+  printf("fov enum number: %d\n", new_fov);
+  send_generic_request(request, port, response);
 }
 
 void publish_subscribe_example()
@@ -137,8 +203,66 @@ void publish_subscribe_example()
 int main()
 {
     std::cout << "Test Communication with SonaSoft API\n";
+
+    // Requests latest system type and parses reply - runs once
     request_reply_example();
+
+    /*
+    // Subscribes to sytem type message - this loops forever (uncomment to run)
     publish_subscribe_example();
+    */
+
+    //
+    // Test toggling processor controls
+    //
+    bool bottom_detect = false;
+    bool auto_squelch_on = false;
+    float squelch_value = 150.0f;
+    while (true) {
+      // Bottom detection
+      printf("About to send request to change bottom to: %d\n", bottom_detect);
+      system("pause");
+      toggle_bottom_detection(bottom_detect);
+      printf("\n");
+
+      // Auto squelch
+      printf("About to send request to change autosquelch to: %d\n",
+        auto_squelch_on);
+      system("pause");
+      toggle_auto_squelch(auto_squelch_on);
+      printf("\n");
+
+      if (!auto_squelch_on) {
+        // Change Squelch value (only makes sense for manual squelch)
+        printf("About to send request to manual squelch to: %f\n",
+          squelch_value);
+        system("pause");
+        set_squelch(squelch_value);
+        squelch_value = (squelch_value == 150.0f) ? 170.0f : 150.0f;
+        printf("\n");
+      }
+
+      // Change field of view
+      printf("About to change field of view / processor mode to: %d\n",
+        proto::nav_api::FieldOfView::k120d100m);
+      system("pause");
+      set_fov(proto::nav_api::FieldOfView::k120d100m);
+
+      printf("About to change field of view / processor mode to: %d\n",
+        proto::nav_api::FieldOfView::k120d200m);
+      system("pause");
+      set_fov(proto::nav_api::FieldOfView::k120d200m);
+
+
+      printf("About to change field of view / processor mode to: %d\n",
+        proto::nav_api::FieldOfView::k90d500m);
+      system("pause");
+      set_fov(proto::nav_api::FieldOfView::k90d500m);
+ 
+      // Toggle bools
+      auto_squelch_on = !auto_squelch_on;
+      bottom_detect = !bottom_detect;
+    }
 }
 
 
