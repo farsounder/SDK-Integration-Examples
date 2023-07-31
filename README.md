@@ -11,3 +11,13 @@ The compiled versions of the `proto-files` are already included in the project, 
 We use ProtocolBuffers to manage structured data in a language neutral way, and ZeroMQ to pass serialized "proto" messages between processes.
 
 If you have any questions, suggestions, or recommendations, please feel free to email: service@farsounder.com.
+
+## Running the example
+This version of the example uses C++ in Visual Studio 2019 on Windows. The
+required versions of the zeromq and protobuf libraries are included in the
+project.
+First, you will need to compile the .proto files into cpp files. This can be
+done by running the build_protos.bat file in the SDKMessageExample folder.
+Next, add the PATH=$(Path);$(SolutionDir)\SDKMessageExample\libzmq; to solution
+properties -> debugging --> environment and make sure merge environment is
+true. This is to find the zmq dll at runtime.
