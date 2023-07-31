@@ -4,8 +4,8 @@
 #include <iostream>
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
-#include "..\zeromq\include\zmq.h"
-#include "..\zeromq\include\zmq.hpp"
+#include "zeromq/include/zmq.h"
+#include "zeromq/include/zmq.hpp"
 
 #include "proto/nav_api.pb.h"
 
