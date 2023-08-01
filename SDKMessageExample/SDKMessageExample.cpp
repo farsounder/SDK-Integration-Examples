@@ -4,8 +4,8 @@
 #include <iostream>
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
-#include "..\zeromq\include\zmq.h"
-#include "..\zeromq\include\zmq.hpp"
+#include "zeromq/include/zmq.h"
+#include "zeromq/include/zmq.hpp"
 
 #include "proto/nav_api.pb.h"
 
@@ -32,7 +32,7 @@ template <class ProtoMessage>
 inline bool ParseLargeMessage(const void *data, int data_len, ProtoMessage *proto_msg) {
   google::protobuf::io::ArrayInputStream array_stream(data, data_len);
   google::protobuf::io::CodedInputStream coded_stream(&array_stream);
-  coded_stream.SetTotalBytesLimit(kLargeMessageBytesLimit, kLargeMessageBytesWarningThreshold);
+  coded_stream.SetTotalBytesLimit(kLargeMessageBytesLimit);
   bool success = proto_msg->ParseFromCodedStream(&coded_stream);
   return success;
 }
@@ -41,7 +41,7 @@ inline bool ParseLargeMessage(const void *data, int data_len, ProtoMessage *prot
 bool ProtoMessageToZeromqMessage(
   const ::google::protobuf::MessageLite &proto_message,
   zmq::message_t *zeromq_message) {
-  int string_size = proto_message.ByteSize();
+  int string_size = proto_message.ByteSizeLong();
   // We malloc a char* instead of using a std::string so we can pass ownership
   // to the zeromq_message. It will take care of calling free().
   void *string = malloc(string_size);
@@ -94,9 +94,9 @@ void send_generic_request(
   zmq::message_t update;
   ProtoMessageToZeromqMessage(req, &update);
   printf("Send request\n");
-  zmq_socket.send(update, 0);
+  zmq_socket.send(update, zmq::send_flags::none);
   printf("Check for response\n");
-  zmq_socket.recv(&update, 0);
+  zmq_socket.recv(update, zmq::recv_flags::none);
   // zmq response back to a proto message
   ZeromqMessageToProtoMessage(update, &res);
   printf("result=%d\n", res.result().code());
@@ -124,9 +124,9 @@ void request_reply_example()
   zmq::message_t update;
   ProtoMessageToZeromqMessage(gpsReq, &update);
   printf("Send request\n");
-  req_processorSettings.send(update, 0);
+  req_processorSettings.send(update, zmq::send_flags::none);
   printf("Check for response\n");
-  req_processorSettings.recv(&update, 0);
+  req_processorSettings.recv(update, zmq::recv_flags::none);
   // zmq response back to a proto message
   ZeromqMessageToProtoMessage(update, &gpsResp);
   printf("result=%d\n", gpsResp.result().code());
@@ -184,13 +184,12 @@ void publish_subscribe_example()
   std::string port = "61503";
 
   subscr_processorSettings.connect(address + port);
-  subscr_processorSettings.setsockopt(ZMQ_SUBSCRIBE, "", 0);
-  int flags = ZMQ_DONTWAIT;  // make it a non-blocking call
+  subscr_processorSettings.set(zmq::sockopt::subscribe, ""); 
   bool loop = true;
   while (loop)
   {
     zmq::message_t update;
-    if (subscr_processorSettings.recv(&update, flags))
+    if (subscr_processorSettings.recv(update, zmq::recv_flags::dontwait))
     {
       proto::nav_api::ProcessorSettings processorSettings;
       if (processorSettings.ParseFromArray(update.data(), update.size()))
