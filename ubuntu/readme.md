@@ -2,7 +2,7 @@
 ## Install dependencies
 
 ### Install 0MQ
-Install [zmq]((https://zeromq.org/download/)(may need to sudo) and g++ (if
+Install [zmq](https://zeromq.org/download/) (may need to sudo) and g++ (if
 not installed already)
 ```
 apt-get update
@@ -12,7 +12,6 @@ apt-get install libzmq3-dev g++
 ### Install a protobuf compiler
 Install the protobuf compiler:
 ```
-apt-get update (if you didn't run above)
 apt-get install protobuf-compiler
 ```
 
@@ -33,27 +32,30 @@ Note the location of libzmq. We need this to link our C++ code against when we
 compile.
 
 There is a simple example from the 0MQ docs in:
-[/examples/hello_world_zmq](/examples/hello_world_zmq) that sets up a req/reply 
+[/ubuntu/examples/hello_world_zmq](/ubuntu/examples/hello_world_zmq) that sets up a req/reply 
 verison of hello world on a tcp port.
-Compile each file (sender.cpp and receiver.cpp). For example, terminal 1:
+Compile each file (sender.cpp and receiver.cpp): 
 ```
 g++ sender.cpp -L /usr/lib/x86_64-linux-gnu -lzmq -o sender
-```
-
-Terminal 2:
-```
 g++ receiver.cpp -L /usr/lib/x86_64-linux-gnu -lzmq -o receiver
 ```
-
 Remember to replace the "x86_64-linux-gnu" dir with whereever your libzmq is
 located.
 
+And run them in separate terminals, eg Terminal 1:
+```
+./sender
+```
+Terminal 2:
+```
+./receiver
+```
 If they both compile and run, your 0MQ install is ready!
 
 ### Test protobuf setup
-Find the protobuf library so you can link against it - this changes a bit 
-depending on the actual linux distro. You can use: `ldconfig -p | grep proto`
-to find it. I get the following on WSL2:
+
+Ame as above, find the protobuf library so you can link against it. You can use:
+`ldconfig -p | grep proto` to find it. I get the following on WSL2:
 
 ```
 $ ldconfig -p | grep proto
