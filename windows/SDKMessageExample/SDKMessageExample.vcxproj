@@ -154,7 +154,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)SDKMessageExample\protobuf-bin\include;C:\dev\SDKMessageExample\SDKMessageExample\zeromq\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)SDKMessageExample\protobuf-bin\include;$(SolutionDir)SDKMessageExample\zeromq\include</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
