@@ -19,7 +19,8 @@ required.
 
 Here's a schematic of those two cases:
 
-![sdk_setup](https://github.com/farsounder/SDKMessageExample/assets/5819478/a2aa0f91-2ae3-415b-8001-9860ba3c6a6b)
+![sdk_setup](https://github.com/farsounder/SDKMessageExample/assets/5819478/745e7ef9-8b12-402a-bdef-15f510fcee4e)
+
 
 If you have any questions, suggestions, or recommendations, please feel free to email: service@farsounder.com.
 
