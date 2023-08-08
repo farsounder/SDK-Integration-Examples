@@ -1,6 +1,7 @@
 # Minimal SDK Example
 ## Example implementation - SonaSoft™ SDK message passing
-This example implements both methods of commumicating with SonaSoft via the API described in [FarSounder's SDK documentation:](http://www.farsounder.com/files/F33583-FarSounder_IDD_4.0.1.pdf)
+This example implements both methods of commumicating with SonaSoft via the network API. There is a detailed description
+in the Interface Design Definition available on the [SDK page of the website](https://www.farsounder.com/software-development-kit)
 1. Publish / Subscribe
 2. Request / Reply
 
