@@ -40,3 +40,9 @@ setting up are in the [ubuntu folder](/ubuntu/readme.md).
 
 ### Docker
 Instructions for running a containerized version of the linux example [here](https://github.com/farsounder/SDKMessageExample/tree/master/ubuntu#running-in-docker-container)
+
+# Licensing
+Though the SDK is provided free of charge for non-commercial applications, development partners are still
+required to sign a licensing agreement with FarSounder to receive the complete SDK materials and become an
+authorized third-party integrator. Please contact us at service@farsounder.com to complete the licensing
+agreement or discuss use for commerical applications.
