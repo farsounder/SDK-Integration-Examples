@@ -127,4 +127,12 @@ And then run in interactive mode:
 sudo docker run -itp 61000-62000:61000-62000 test_interface
 ```
 
-
+### Windows Firewall Settings
+It may be necessary depending on your firewall settings to add a custom rule to
+allow connections between your WSL2 instance and Windows. You can use following
+command in an Administrator PowerShell to do this:
+```powershell
+New-NetFirewallRule -DisplayName "WSL" -Direction Inbound -LocalAddress 192.168.160.1 -Action Allow
+```
+Remember to replace your `-LocalAddress` with the address returned by
+`cat /etc/resolv.conf` in your WSL2 instance.
