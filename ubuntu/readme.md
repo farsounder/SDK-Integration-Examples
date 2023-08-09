@@ -114,9 +114,9 @@ Now you can run it with: `./test_interface`, and if SonaSoft is running - send
 and receive information from it.
 
 ### Running in Docker container
-The Linux version of this interface can be run in a Docker container using the included
-Dockerfile. If using WSL2, details for configuring Docker Desktop so you can use it with
-your WSL2 ubuntu version are here: https://docs.docker.com/desktop/wsl/
+The Linux version of this interface can be run in a Docker container using the
+included Dockerfile. If using WSL2, details for configuring Docker Desktop so
+you can use it with your WSL2 ubuntu version are here: https://docs.docker.com/desktop/wsl/
 
 To build the image:
 ```bash
