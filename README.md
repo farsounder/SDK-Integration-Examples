@@ -6,7 +6,7 @@ in the Interface Design Definition available on the [SDK page of the website](ht
 2. Request / Reply
 
 The necessary binaries for ZeroMQ are also included. However if you would like
-to download either of these dependencies to run differnt versions based on your
+to download either of these dependencies to run different versions based on your
 requirements - or to look at their official docs:
 * ZeroMQ - https://zeromq.org/
 * ProtocolBuffers - https://developers.google.com/protocol-buffers
