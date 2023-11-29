@@ -24,22 +24,27 @@ function App() {
       });
   }, []);
 
-
-  console.log(processorSettings)
   return (
     <main>
       <h1>Nav Client</h1>
       <section>
         <h2>Processor Settings</h2>
+        <h3>
+          {processorSettings
+          ? "Response from SonaSoft!"
+          : "No response from SonaSoft :("}
+        </h3>
         <div>
-          {Object.keys(processorSettings || {}).map((key) => {
-            return (
-              <div key={key}>
-                <span>{key}:{" "}</span>
-                <span>{processorSettings?.[key as keyof ProcessorSettings]}</span>
-              </div>
-            )
-          })}
+          {processorSettings
+          ? Object.keys(processorSettings || {}).map((key) => {
+              return (
+                <div key={key}>
+                  <span>{key}:{" "}</span>
+                  <span>{processorSettings?.[key as keyof ProcessorSettings]}</span>
+                </div>
+              )
+            })
+          : "Loading..."}
         </div>
       </section>
     </main>
