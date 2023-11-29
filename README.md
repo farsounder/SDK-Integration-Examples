@@ -1,48 +1,47 @@
 # Minimal SDK Example
-## Example implementation - SonaSoft™ SDK message passing
-This example implements both methods of commumicating with SonaSoft via the network API. There is a detailed description
-in the Interface Design Definition available on the [SDK page of the website](https://www.farsounder.com/software-development-kit)
-1. Publish / Subscribe
-2. Request / Reply
 
-The necessary binaries for ZeroMQ are also included. However if you would like
-to download either of these dependencies to run differnt versions based on your
-requirements - or to look at their official docs:
+## Two methods of communicating with SonaSoft™
+There are two methods available to communicate with SonaSoft™. The first uses
+messages that are serialized using Google's Protocol Buffers sent over ZeroMQ
+sockets. The second uses an HTTP REST API that sends and receives JSON.
+
+## Option 1: Protobuf/ZMQ SonaSoft™ SDK message passing
+The first option for integration is to use send and receive Protobuf messages over ZeroMQ. There are client libraries for both ZeroMQ and Protobuf in many 
+different languages. And you can find specific information about our API in the
+Interface Design Definition available on the
+[SDK page of the website](https://www.farsounder.com/software-development-kit)
+
+The necessary binaries for ZeroMQ on Windows are also included in the example.
+However if you would like to download either of these dependencies to run
+different versions based on your requirements - or to look at their official 
+docs, you can find them here:
 * ZeroMQ - https://zeromq.org/
 * ProtocolBuffers - https://developers.google.com/protocol-buffers
 
 We use ProtocolBuffers to manage structured data in a language neutral way, and ZeroMQ to pass serialized "proto" messages between processes.
 
-The FarSounderSDK package (can be obtained by contacting us if you do not have already) contains an "SDK Version" of SonaSoft
-that can be used to run through recorded sonar data files to simulate a few different real world scenarios and test any
-interface in development. In order to connect to the actual hardware, a standard "navigation" installation of SonaSoft is
-required.
+The example for this method is in the zmq_protobuf_api folder. It is a simple
+C++ program that connects to SonaSoft™ and receives messages from it, there is
+an example for Ubuntu and Windows, and a dockerfile for running the example in
+an Ubuntu container.
 
-Here's a schematic of those two cases:
+## Option 2: HTTP REST API
+The second option for integration is to use the HTTP REST API. This is a simple
+API server that runs on the machine that SonaSoft™ is installed on. Sending
+JSON over HTTP is much simpler than using ZeroMQ and Protobuf, but it is not
+as fast or efficient. Live docs for the API are available on the machine that
+SonaSoft™ is installed on, you can find them by starting SonaSoft and
+going to http://localhost:3000/docs in your browser.
 
-![sdk_setup](https://github.com/farsounder/SDKMessageExample/assets/5819478/745e7ef9-8b12-402a-bdef-15f510fcee4e)
-
+## Playing back recorded data w/ SonaSoft™ SDK
+The FarSounderSDK package has an "SDK Version" of SonaSoft™ that can be used to
+run through recorded sonar data files to simulate a few different real world
+scenarios and test any interface in development.
+The FarSounderSDK package (can be obtained by contacting us if you do not have 
+it already) contains an "SDK Version" of SonaSoft
+that can be used to run through recorded sonar data files to simulate a few 
+different real world scenarios and test any interface in development. In order 
+to connect to the actual hardware, a standard "navigation" installation of 
+SonaSoft is required.
 
 If you have any questions, suggestions, or recommendations, please feel free to email: service@farsounder.com.
-
-## Running the example
-
-### Windows
-This version of the example uses C++ in Visual Studio 2022 on Windows. The
-required versions of the zeromq and protobuf libraries are included in the
-project. Before running, you will need to compile the .proto files into cpp
-files. This can be done by running the build_protos.bat file in the
-SDKMessageExample folder.
-
-### Ubuntu
-This version runs was tested using Ubuntu on WSL2, detailed instructions for
-setting up are in the [ubuntu folder](/ubuntu/readme.md).
-
-### Docker
-Instructions for running a containerized version of the linux example [here](https://github.com/farsounder/SDKMessageExample/tree/master/ubuntu#running-in-docker-container)
-
-# Licensing
-Though the SDK is provided free of charge for non-commercial applications, development partners are still
-required to sign a licensing agreement with FarSounder to receive the complete SDK materials and become an
-authorized third-party integrator. Please contact us at service@farsounder.com to complete the licensing
-agreement or discuss use for commerical applications.
