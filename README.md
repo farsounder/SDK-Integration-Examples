@@ -34,9 +34,6 @@ SonaSoft™ is installed on, you can find them by starting SonaSoft and
 going to http://localhost:3000/docs in your browser.
 
 ## Playing back recorded data w/ SonaSoft™ SDK
-The FarSounderSDK package has an "SDK Version" of SonaSoft™ that can be used to
-run through recorded sonar data files to simulate a few different real world
-scenarios and test any interface in development.
 The FarSounderSDK package (can be obtained by contacting us if you do not have 
 it already) contains an "SDK Version" of SonaSoft
 that can be used to run through recorded sonar data files to simulate a few 
