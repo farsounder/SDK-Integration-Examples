@@ -1,0 +1,727 @@
+<!doctype html>
+<html>
+  <head>
+    <title>SonaSoft Navigation API</title>
+    <style type="text/css">
+      body {
+	font-family: Trebuchet MS, sans-serif;
+	font-size: 15px;
+	color: #444;
+	margin-right: 24px;
+}
+
+h1	{
+	font-size: 25px;
+}
+h2	{
+	font-size: 20px;
+}
+h3	{
+	font-size: 16px;
+	font-weight: bold;
+}
+hr	{
+	height: 1px;
+	border: 0;
+	color: #ddd;
+	background-color: #ddd;
+}
+
+.app-desc {
+  clear: both;
+  margin-left: 20px;
+}
+.param-name {
+  width: 100%;
+}
+.license-info {
+  margin-left: 20px;
+}
+
+.license-url {
+  margin-left: 20px;
+}
+
+.model {
+  margin: 0 0 0px 20px;
+}
+
+.method {
+  margin-left: 20px;
+}
+
+.method-notes	{
+	margin: 10px 0 20px 0;
+	font-size: 90%;
+	color: #555;
+}
+
+pre {
+  padding: 10px;
+  margin-bottom: 2px;
+}
+
+.http-method {
+ text-transform: uppercase;
+}
+
+pre.get {
+  background-color: #0f6ab4;
+}
+
+pre.post {
+  background-color: #10a54a;
+}
+
+pre.put {
+  background-color: #c5862b;
+}
+
+pre.delete {
+  background-color: #a41e22;
+}
+
+.huge	{
+	color: #fff;
+}
+
+pre.example {
+  background-color: #f3f3f3;
+  padding: 10px;
+  border: 1px solid #ddd;
+}
+
+code {
+  white-space: pre;
+}
+
+.nickname {
+  font-weight: bold;
+}
+
+.method-path {
+  font-size: 1.5em;
+  background-color: #0f6ab4;
+}
+
+.up {
+  float:right;
+}
+
+.parameter {
+  width: 500px;
+}
+
+.param {
+  width: 500px;
+  padding: 10px 0 0 20px;
+  font-weight: bold;
+}
+
+.param-desc {
+  width: 700px;
+  padding: 0 0 0 20px;
+  color: #777;
+}
+
+.param-type {
+  font-style: italic;
+}
+
+.param-enum-header {
+width: 700px;
+padding: 0 0 0 60px;
+color: #777;
+font-weight: bold;
+}
+
+.param-enum {
+width: 700px;
+padding: 0 0 0 80px;
+color: #777;
+font-style: italic;
+}
+
+.field-label {
+  padding: 0;
+  margin: 0;
+  clear: both;
+}
+
+.field-items	{
+	padding: 0 0 15px 0;
+	margin-bottom: 15px;
+}
+
+.return-type {
+  clear: both;
+  padding-bottom: 10px;
+}
+
+.param-header {
+  font-weight: bold;
+}
+
+.method-tags {
+  text-align: right;
+}
+
+.method-tag {
+  background: none repeat scroll 0% 0% #24A600;
+  border-radius: 3px;
+  padding: 2px 10px;
+  margin: 2px;
+  color: #FFF;
+  display: inline-block;
+  text-decoration: none;
+}
+
+    </style>
+  </head>
+  <body>
+  <h1>SonaSoft Navigation API</h1>
+    <div class="app-desc"><p>REST API to access processed sonar data from SonaSoft.</p>
+<p>This API is intended to be used to retrieve processed sonar data from SonaSoft,
+and to provide a means to control SonaSoft. It gives access to the live,
+ping-to-ping data as well as the history data that is stored locally in a
+database.</p>
+<p>Data can be requested as JSON or serialized to binary using protobuf format.</p>
+</div>
+    <div class="app-desc">More information: <a href="https://www.farsounder.com/software-development-kit">https://www.farsounder.com/software-development-kit</a></div>
+    <div class="app-desc">Contact Info: <a href="service@farsounder.com">service@farsounder.com</a></div>
+    <div class="app-desc">Version: 0.1.0</div>
+    <div class="app-desc">BasePath:</div>
+    <div class="license-info">License Agreement Required for Commercial Use</div>
+    <div class="license-url">https://www.farsounder.com/software-development-kit</div>
+  <h2>Access</h2>
+
+  <h2><a name="__Methods">Methods</a></h2>
+  [ Jump to <a href="#__Models">Models</a> ]
+
+  <h3>Table of Contents </h3>
+  <div class="method-summary"></div>
+  <h4><a href="#Default">Default</a></h4>
+  <ul>
+  <li><a href="#historyDataApiHistoryDataGet"><code><span class="http-method">get</span> /api/history_data</code></a></li>
+  <li><a href="#processorSettingsApiProcessorSettingsGet"><code><span class="http-method">get</span> /api/processor_settings</code></a></li>
+  <li><a href="#targetDataApiTargetDataGet"><code><span class="http-method">get</span> /api/target_data</code></a></li>
+  <li><a href="#updateProcessorSettingsApiProcessorSettingsPatch"><code><span class="http-method">patch</span> /api/processor_settings</code></a></li>
+  </ul>
+
+  <h1><a name="Default">Default</a></h1>
+  <div class="method"><a name="historyDataApiHistoryDataGet"/>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="get"><code class="huge"><span class="http-method">get</span> /api/history_data</code></pre></div>
+    <div class="method-summary">Get the latest history data (<span class="nickname">historyDataApiHistoryDataGet</span>)</div>
+    <div class="method-notes"><p>Get the latest Local History Mapping data.</p>
+<p>This endpoint returns the latest Local History Mapping data from the history
+database. This includes gridded bottom and inwater detections within the
+specified radius of the given latitude and longitude. If since_timestamp_utc
+is specified, then only data that has been collected or updated since that
+time will be returned. If since_timestamp_utc is not specified, then all the
+data in the radius will be returned.</p>
+<p>Serializing to JSON is slow, so about 500-2000 records is a good
+limit to use for pagination. The limit and skip parameters can be used to
+paginate through the data. The total number of records available is returned
+in the X-Grids-Count header.</p>
+</div>
+
+
+
+
+
+    <h3 class="field-label">Query parameters</h3>
+    <div class="field-items">
+      <div class="param">latitude (required)</div>
+
+      <div class="param-desc"><span class="param-type">Query Parameter</span> &mdash; Latitude in decimal degrees default: null </div><div class="param">longitude (required)</div>
+
+      <div class="param-desc"><span class="param-type">Query Parameter</span> &mdash; Longitude in decimal degrees default: null </div><div class="param">radius_meters (optional)</div>
+
+      <div class="param-desc"><span class="param-type">Query Parameter</span> &mdash; Radius within which to query for history data, in Meters default: 500.0 </div><div class="param">since_timestamp_utc (optional)</div>
+
+      <div class="param-desc"><span class="param-type">Query Parameter</span> &mdash; Return data that has been collected or updated since this time in UTC seconds since the linux epoch. If it is not specified, then all the data in the radius will be returned. default: null </div><div class="param">skip (optional)</div>
+
+      <div class="param-desc"><span class="param-type">Query Parameter</span> &mdash;  default: 0 </div><div class="param">limit (optional)</div>
+
+      <div class="param-desc"><span class="param-type">Query Parameter</span> &mdash;  default: 500 </div>
+    </div>  <!-- field-items -->
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      <a href="#HistoryData">HistoryData</a>
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>{
+  "gridded_inwater_detections" : [ {
+    "longitude_degrees" : 2.027123023002322,
+    "latitude_degrees" : 3.616076749251911,
+    "timestamp_utc" : 9.301444243932576,
+    "deepest_depth_meters" : 1.0246457001441578,
+    "is_tide_corrected" : true,
+    "uploaded_to_cloud" : true,
+    "grid_interval_meters" : 4.145608029883936,
+    "target_strength_db" : 7.386281948385884,
+    "shallowest_depth_meters" : 1.4894159098541704,
+    "number_of_points" : 1
+  }, {
+    "longitude_degrees" : 2.027123023002322,
+    "latitude_degrees" : 3.616076749251911,
+    "timestamp_utc" : 9.301444243932576,
+    "deepest_depth_meters" : 1.0246457001441578,
+    "is_tide_corrected" : true,
+    "uploaded_to_cloud" : true,
+    "grid_interval_meters" : 4.145608029883936,
+    "target_strength_db" : 7.386281948385884,
+    "shallowest_depth_meters" : 1.4894159098541704,
+    "number_of_points" : 1
+  } ],
+  "gridded_bottom_detections" : [ {
+    "longitude_degrees" : 1.4658129805029452,
+    "latitude_degrees" : 6.027456183070403,
+    "timestamp_utc" : 0.8008281904610115,
+    "depth_meters" : 7.061401241503109,
+    "is_tide_corrected" : true,
+    "uploaded_to_cloud" : true,
+    "grid_interval_meters" : 5.962133916683182,
+    "target_strength_db" : 5.637376656633329,
+    "number_of_points" : 2
+  }, {
+    "longitude_degrees" : 1.4658129805029452,
+    "latitude_degrees" : 6.027456183070403,
+    "timestamp_utc" : 0.8008281904610115,
+    "depth_meters" : 7.061401241503109,
+    "is_tide_corrected" : true,
+    "uploaded_to_cloud" : true,
+    "grid_interval_meters" : 5.962133916683182,
+    "target_strength_db" : 5.637376656633329,
+    "number_of_points" : 2
+  } ]
+}</code></pre>
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>{
+  "detail" : [ {
+    "msg" : "msg",
+    "loc" : [ "ValidationError_loc_inner", "ValidationError_loc_inner" ],
+    "type" : "type"
+  }, {
+    "msg" : "msg",
+    "loc" : [ "ValidationError_loc_inner", "ValidationError_loc_inner" ],
+    "type" : "type"
+  } ]
+}</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successful Response
+        <a href="#HistoryData">HistoryData</a>
+    <h4 class="field-label">422</h4>
+    Validation Error
+        <a href="#HTTPValidationError">HTTPValidationError</a>
+  </div> <!-- method -->
+  <hr/>
+  <div class="method"><a name="processorSettingsApiProcessorSettingsGet"/>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="get"><code class="huge"><span class="http-method">get</span> /api/processor_settings</code></pre></div>
+    <div class="method-summary">Get the current processor settings (<span class="nickname">processorSettingsApiProcessorSettingsGet</span>)</div>
+    <div class="method-notes">Get the latest processor settings.</div>
+
+
+
+
+
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      <a href="#ProcessorSettings">ProcessorSettings</a>
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>{
+  "current_squelch_db" : 5.962133916683182,
+  "minimum_squelch_db" : 6.027456183070403,
+  "timestamp_utc" : 0.8008281904610115,
+  "maximum_squelch_db" : 1.4658129805029452,
+  "detect_bottom_enabled" : true,
+  "auto_squelch_mode_enabled" : true
+}</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successful Response
+        <a href="#ProcessorSettings">ProcessorSettings</a>
+  </div> <!-- method -->
+  <hr/>
+  <div class="method"><a name="targetDataApiTargetDataGet"/>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="get"><code class="huge"><span class="http-method">get</span> /api/target_data</code></pre></div>
+    <div class="method-summary">Get the latest realtime detection data (<span class="nickname">targetDataApiTargetDataGet</span>)</div>
+    <div class="method-notes"><p>Get the latest realtime detection data.</p>
+<p>This endpoint returns the latest detection data from the realtime processor.
+This includes realtime detections from the latest ping on any inwater targets
+as well as the latest detections from the latest ping on any bottom targets.</p>
+</div>
+
+
+
+
+
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      <a href="#TargetData">TargetData</a>
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>{
+  "timestamp_utc" : 0.8008281904610115,
+  "heading" : {
+    "heading_type" : "",
+    "heading" : 6.027456183070403
+  },
+  "bottom_detections" : [ {
+    "down_range_meters" : 7.061401241503109,
+    "depth_meters" : 9.301444243932576,
+    "target_strength_db" : 3.616076749251911,
+    "cross_range_meters" : 2.3021358869347655
+  }, {
+    "down_range_meters" : 7.061401241503109,
+    "depth_meters" : 9.301444243932576,
+    "target_strength_db" : 3.616076749251911,
+    "cross_range_meters" : 2.3021358869347655
+  } ],
+  "serial_number" : "serial_number",
+  "position" : {
+    "longitude_degrees" : 5.962133916683182,
+    "latitude_degrees" : 1.4658129805029452,
+    "altitude_meters" : 5.637376656633329
+  },
+  "inwater_detections" : [ {
+    "inwater_detection_group" : [ {
+      "down_range_meters" : 7.061401241503109,
+      "depth_meters" : 9.301444243932576,
+      "target_strength_db" : 3.616076749251911,
+      "cross_range_meters" : 2.3021358869347655
+    }, {
+      "down_range_meters" : 7.061401241503109,
+      "depth_meters" : 9.301444243932576,
+      "target_strength_db" : 3.616076749251911,
+      "cross_range_meters" : 2.3021358869347655
+    } ]
+  }, {
+    "inwater_detection_group" : [ {
+      "down_range_meters" : 7.061401241503109,
+      "depth_meters" : 9.301444243932576,
+      "target_strength_db" : 3.616076749251911,
+      "cross_range_meters" : 2.3021358869347655
+    }, {
+      "down_range_meters" : 7.061401241503109,
+      "depth_meters" : 9.301444243932576,
+      "target_strength_db" : 3.616076749251911,
+      "cross_range_meters" : 2.3021358869347655
+    } ]
+  } ],
+  "maximum_depth_meters" : 2.027123023002322,
+  "maximum_range_index" : 4
+}</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successful Response
+        <a href="#TargetData">TargetData</a>
+  </div> <!-- method -->
+  <hr/>
+  <div class="method"><a name="updateProcessorSettingsApiProcessorSettingsPatch"/>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="patch"><code class="huge"><span class="http-method">patch</span> /api/processor_settings</code></pre></div>
+    <div class="method-summary">Change the current processor settings (<span class="nickname">updateProcessorSettingsApiProcessorSettingsPatch</span>)</div>
+    <div class="method-notes"><p>Update the current processor settings.</p>
+<p>This endpoint is used to change the current processor settings. The settings
+included in the request will be updated, the rest will be left unchanged.</p>
+</div>
+
+
+    <h3 class="field-label">Consumes</h3>
+    This API call consumes the following media types via the <span class="header">Content-Type</span> request header:
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Request body</h3>
+    <div class="field-items">
+      <div class="param">ProcessorSettingsUpdate <a href="#ProcessorSettingsUpdate">ProcessorSettingsUpdate</a> (required)</div>
+
+      <div class="param-desc"><span class="param-type">Body Parameter</span> &mdash;  </div>
+
+    </div>  <!-- field-items -->
+
+
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      <a href="#ProcessorSettings">ProcessorSettings</a>
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>{
+  "current_squelch_db" : 5.962133916683182,
+  "minimum_squelch_db" : 6.027456183070403,
+  "timestamp_utc" : 0.8008281904610115,
+  "maximum_squelch_db" : 1.4658129805029452,
+  "detect_bottom_enabled" : true,
+  "auto_squelch_mode_enabled" : true
+}</code></pre>
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>{
+  "detail" : [ {
+    "msg" : "msg",
+    "loc" : [ "ValidationError_loc_inner", "ValidationError_loc_inner" ],
+    "type" : "type"
+  }, {
+    "msg" : "msg",
+    "loc" : [ "ValidationError_loc_inner", "ValidationError_loc_inner" ],
+    "type" : "type"
+  } ]
+}</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successful Response
+        <a href="#ProcessorSettings">ProcessorSettings</a>
+    <h4 class="field-label">422</h4>
+    Validation Error
+        <a href="#HTTPValidationError">HTTPValidationError</a>
+  </div> <!-- method -->
+  <hr/>
+
+  <h2><a name="__Models">Models</a></h2>
+  [ Jump to <a href="#__Methods">Methods</a> ]
+
+  <h3>Table of Contents</h3>
+  <ol>
+    <li><a href="#Detection"><code>Detection</code> - Detection</a></li>
+    <li><a href="#FOVType"><code>FOVType</code> - FOVType</a></li>
+    <li><a href="#GriddedBottomDetection"><code>GriddedBottomDetection</code> - GriddedBottomDetection</a></li>
+    <li><a href="#GriddedInwaterDetection"><code>GriddedInwaterDetection</code> - GriddedInwaterDetection</a></li>
+    <li><a href="#HTTPValidationError"><code>HTTPValidationError</code> - HTTPValidationError</a></li>
+    <li><a href="#Heading"><code>Heading</code> - Heading</a></li>
+    <li><a href="#HeadingType"><code>HeadingType</code> - HeadingType</a></li>
+    <li><a href="#HistoryData"><code>HistoryData</code> - HistoryData</a></li>
+    <li><a href="#InwaterDetectionGroup"><code>InwaterDetectionGroup</code> - InwaterDetectionGroup</a></li>
+    <li><a href="#Position"><code>Position</code> - Position</a></li>
+    <li><a href="#ProcessorSettings"><code>ProcessorSettings</code> - ProcessorSettings</a></li>
+    <li><a href="#ProcessorSettingsUpdate"><code>ProcessorSettingsUpdate</code> - ProcessorSettingsUpdate</a></li>
+    <li><a href="#SystemType"><code>SystemType</code> - SystemType</a></li>
+    <li><a href="#TargetData"><code>TargetData</code> - TargetData</a></li>
+    <li><a href="#ValidationError"><code>ValidationError</code> - ValidationError</a></li>
+    <li><a href="#ValidationError_loc_inner"><code>ValidationError_loc_inner</code> - </a></li>
+  </ol>
+
+  <div class="model">
+    <h3><a name="Detection"><code>Detection</code> - Detection</a> <a class="up" href="#__Models">Up</a></h3>
+    <div class='model-description'></div>
+    <div class="field-items">
+      <div class="param">cross_range_meters </div><div class="param-desc"><span class="param-type"><a href="#number">BigDecimal</a></span>  </div>
+<div class="param">down_range_meters </div><div class="param-desc"><span class="param-type"><a href="#number">BigDecimal</a></span>  </div>
+<div class="param">depth_meters </div><div class="param-desc"><span class="param-type"><a href="#number">BigDecimal</a></span>  </div>
+<div class="param">target_strength_db </div><div class="param-desc"><span class="param-type"><a href="#number">BigDecimal</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="FOVType"><code>FOVType</code> - FOVType</a> <a class="up" href="#__Models">Up</a></h3>
+    <div class='model-description'>Enum for field of view types.</div>
+    <div class="field-items">
+          </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="GriddedBottomDetection"><code>GriddedBottomDetection</code> - GriddedBottomDetection</a> <a class="up" href="#__Models">Up</a></h3>
+    <div class='model-description'></div>
+    <div class="field-items">
+      <div class="param">timestamp_utc </div><div class="param-desc"><span class="param-type"><a href="#number">BigDecimal</a></span>  </div>
+<div class="param">latitude_degrees </div><div class="param-desc"><span class="param-type"><a href="#number">BigDecimal</a></span>  </div>
+<div class="param">longitude_degrees </div><div class="param-desc"><span class="param-type"><a href="#number">BigDecimal</a></span>  </div>
+<div class="param">grid_interval_meters </div><div class="param-desc"><span class="param-type"><a href="#number">BigDecimal</a></span>  </div>
+<div class="param">target_strength_db </div><div class="param-desc"><span class="param-type"><a href="#number">BigDecimal</a></span>  </div>
+<div class="param">is_tide_corrected </div><div class="param-desc"><span class="param-type"><a href="#boolean">Boolean</a></span>  </div>
+<div class="param">uploaded_to_cloud </div><div class="param-desc"><span class="param-type"><a href="#boolean">Boolean</a></span>  </div>
+<div class="param">number_of_points </div><div class="param-desc"><span class="param-type"><a href="#integer">Integer</a></span>  </div>
+<div class="param">depth_meters </div><div class="param-desc"><span class="param-type"><a href="#number">BigDecimal</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="GriddedInwaterDetection"><code>GriddedInwaterDetection</code> - GriddedInwaterDetection</a> <a class="up" href="#__Models">Up</a></h3>
+    <div class='model-description'></div>
+    <div class="field-items">
+      <div class="param">timestamp_utc </div><div class="param-desc"><span class="param-type"><a href="#number">BigDecimal</a></span>  </div>
+<div class="param">latitude_degrees </div><div class="param-desc"><span class="param-type"><a href="#number">BigDecimal</a></span>  </div>
+<div class="param">longitude_degrees </div><div class="param-desc"><span class="param-type"><a href="#number">BigDecimal</a></span>  </div>
+<div class="param">grid_interval_meters </div><div class="param-desc"><span class="param-type"><a href="#number">BigDecimal</a></span>  </div>
+<div class="param">target_strength_db </div><div class="param-desc"><span class="param-type"><a href="#number">BigDecimal</a></span>  </div>
+<div class="param">is_tide_corrected </div><div class="param-desc"><span class="param-type"><a href="#boolean">Boolean</a></span>  </div>
+<div class="param">uploaded_to_cloud </div><div class="param-desc"><span class="param-type"><a href="#boolean">Boolean</a></span>  </div>
+<div class="param">number_of_points </div><div class="param-desc"><span class="param-type"><a href="#integer">Integer</a></span>  </div>
+<div class="param">deepest_depth_meters </div><div class="param-desc"><span class="param-type"><a href="#number">BigDecimal</a></span>  </div>
+<div class="param">shallowest_depth_meters </div><div class="param-desc"><span class="param-type"><a href="#number">BigDecimal</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="HTTPValidationError"><code>HTTPValidationError</code> - HTTPValidationError</a> <a class="up" href="#__Models">Up</a></h3>
+    <div class='model-description'></div>
+    <div class="field-items">
+      <div class="param">detail (optional)</div><div class="param-desc"><span class="param-type"><a href="#ValidationError">array[ValidationError]</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="Heading"><code>Heading</code> - Heading</a> <a class="up" href="#__Models">Up</a></h3>
+    <div class='model-description'>Data model for heading data.</div>
+    <div class="field-items">
+      <div class="param">heading_type (optional)</div><div class="param-desc"><span class="param-type"><a href="#HeadingType">HeadingType</a></span>  </div>
+<div class="param">heading </div><div class="param-desc"><span class="param-type"><a href="#number">BigDecimal</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="HeadingType"><code>HeadingType</code> - HeadingType</a> <a class="up" href="#__Models">Up</a></h3>
+    <div class='model-description'>Enum for heading types.</div>
+    <div class="field-items">
+          </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="HistoryData"><code>HistoryData</code> - HistoryData</a> <a class="up" href="#__Models">Up</a></h3>
+    <div class='model-description'>Data model for history data.</div>
+    <div class="field-items">
+      <div class="param">gridded_bottom_detections </div><div class="param-desc"><span class="param-type"><a href="#GriddedBottomDetection">array[GriddedBottomDetection]</a></span>  </div>
+<div class="param">gridded_inwater_detections </div><div class="param-desc"><span class="param-type"><a href="#GriddedInwaterDetection">array[GriddedInwaterDetection]</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="InwaterDetectionGroup"><code>InwaterDetectionGroup</code> - InwaterDetectionGroup</a> <a class="up" href="#__Models">Up</a></h3>
+    <div class='model-description'></div>
+    <div class="field-items">
+      <div class="param">inwater_detection_group </div><div class="param-desc"><span class="param-type"><a href="#Detection">array[Detection]</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="Position"><code>Position</code> - Position</a> <a class="up" href="#__Models">Up</a></h3>
+    <div class='model-description'>Data model for position data.</div>
+    <div class="field-items">
+      <div class="param">latitude_degrees </div><div class="param-desc"><span class="param-type"><a href="#number">BigDecimal</a></span>  </div>
+<div class="param">longitude_degrees </div><div class="param-desc"><span class="param-type"><a href="#number">BigDecimal</a></span>  </div>
+<div class="param">altitude_meters (optional)</div><div class="param-desc"><span class="param-type"><a href="#number">BigDecimal</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="ProcessorSettings"><code>ProcessorSettings</code> - ProcessorSettings</a> <a class="up" href="#__Models">Up</a></h3>
+    <div class='model-description'>Data model for processor settings.</div>
+    <div class="field-items">
+      <div class="param">system_type </div><div class="param-desc"><span class="param-type"><a href="#SystemType">SystemType</a></span>  </div>
+<div class="param">timestamp_utc </div><div class="param-desc"><span class="param-type"><a href="#number">BigDecimal</a></span>  </div>
+<div class="param">minimum_squelch_db </div><div class="param-desc"><span class="param-type"><a href="#number">BigDecimal</a></span>  </div>
+<div class="param">maximum_squelch_db </div><div class="param-desc"><span class="param-type"><a href="#number">BigDecimal</a></span>  </div>
+<div class="param">current_squelch_db </div><div class="param-desc"><span class="param-type"><a href="#number">BigDecimal</a></span>  </div>
+<div class="param">auto_squelch_mode_enabled </div><div class="param-desc"><span class="param-type"><a href="#boolean">Boolean</a></span>  </div>
+<div class="param">detect_bottom_enabled </div><div class="param-desc"><span class="param-type"><a href="#boolean">Boolean</a></span>  </div>
+<div class="param">field_of_view </div><div class="param-desc"><span class="param-type"><a href="#FOVType">FOVType</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="ProcessorSettingsUpdate"><code>ProcessorSettingsUpdate</code> - ProcessorSettingsUpdate</a> <a class="up" href="#__Models">Up</a></h3>
+    <div class='model-description'>Data model for updating processor settings.</div>
+    <div class="field-items">
+      <div class="param">current_squelch_db (optional)</div><div class="param-desc"><span class="param-type"><a href="#number">BigDecimal</a></span>  </div>
+<div class="param">auto_squelch_mode_enabled (optional)</div><div class="param-desc"><span class="param-type"><a href="#boolean">Boolean</a></span>  </div>
+<div class="param">detect_bottom_enabled (optional)</div><div class="param-desc"><span class="param-type"><a href="#boolean">Boolean</a></span>  </div>
+<div class="param">field_of_view (optional)</div><div class="param-desc"><span class="param-type"><a href="#FOVType">FOVType</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="SystemType"><code>SystemType</code> - SystemType</a> <a class="up" href="#__Models">Up</a></h3>
+    <div class='model-description'>Enum for system types.</div>
+    <div class="field-items">
+          </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="TargetData"><code>TargetData</code> - TargetData</a> <a class="up" href="#__Models">Up</a></h3>
+    <div class='model-description'>Data model for target data.</div>
+    <div class="field-items">
+      <div class="param">timestamp_utc </div><div class="param-desc"><span class="param-type"><a href="#number">BigDecimal</a></span>  </div>
+<div class="param">serial_number </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">heading </div><div class="param-desc"><span class="param-type"><a href="#Heading">Heading</a></span>  </div>
+<div class="param">position </div><div class="param-desc"><span class="param-type"><a href="#Position">Position</a></span>  </div>
+<div class="param">bottom_detections </div><div class="param-desc"><span class="param-type"><a href="#Detection">array[Detection]</a></span>  </div>
+<div class="param">inwater_detections </div><div class="param-desc"><span class="param-type"><a href="#InwaterDetectionGroup">array[InwaterDetectionGroup]</a></span>  </div>
+<div class="param">maximum_depth_meters </div><div class="param-desc"><span class="param-type"><a href="#number">BigDecimal</a></span>  </div>
+<div class="param">maximum_range_index </div><div class="param-desc"><span class="param-type"><a href="#integer">Integer</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="ValidationError"><code>ValidationError</code> - ValidationError</a> <a class="up" href="#__Models">Up</a></h3>
+    <div class='model-description'></div>
+    <div class="field-items">
+      <div class="param">loc </div><div class="param-desc"><span class="param-type"><a href="#ValidationError_loc_inner">array[ValidationError_loc_inner]</a></span>  </div>
+<div class="param">msg </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+<div class="param">type </div><div class="param-desc"><span class="param-type"><a href="#string">String</a></span>  </div>
+    </div>  <!-- field-items -->
+  </div>
+  <div class="model">
+    <h3><a name="ValidationError_loc_inner"><code>ValidationError_loc_inner</code> - </a> <a class="up" href="#__Models">Up</a></h3>
+    <div class='model-description'></div>
+    <div class="field-items">
+          </div>  <!-- field-items -->
+  </div>
+  </body>
+</html>
