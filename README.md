@@ -31,7 +31,8 @@ API server that runs on the machine that SonaSoft™ is installed on. Sending
 JSON over HTTP is much simpler than using ZeroMQ and Protobuf, but it is not
 as fast or efficient. Live docs for the API are available on the machine that
 SonaSoft™ is installed on, you can find them by starting SonaSoft and
-going to http://localhost:3000/docs in your browser.
+going to http://localhost:3000/docs in your browser, or view them in the GH Pages
+[for this repo](https://farsounder.github.io/SDKMessageExample/).
 
 ## Playing back recorded data w/ SonaSoft™ SDK
 The FarSounderSDK package (can be obtained by contacting us if you do not have 
