@@ -17,5 +17,5 @@ Then build the python protobuf files with `build_protos_win.bat` on Windows or `
 Finally you can run the example with:
 
 ```bash
-python plot.single.ping.py
+python plot_single_ping.py
 ```
