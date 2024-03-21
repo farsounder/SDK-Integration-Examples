@@ -185,7 +185,9 @@ font-style: italic;
 and to provide a means to control SonaSoft. It gives access to the live,
 ping-to-ping data as well as the history data that is stored locally in a
 database.</p>
-<p>Data can be requested as JSON or serialized to binary using protobuf format.</p>
+<p>Data can be requested as JSON. Using these interactive docs to test the API
+is significantly slower than using the API directly, so keep that in mind and
+test with curl or a similar tool to get a better idea of the performance.</p>
 </div>
     <div class="app-desc">More information: <a href="https://www.farsounder.com/software-development-kit">https://www.farsounder.com/software-development-kit</a></div>
     <div class="app-desc">Contact Info: <a href="service@farsounder.com">service@farsounder.com</a></div>
@@ -200,15 +202,21 @@ database.</p>
 
   <h3>Table of Contents </h3>
   <div class="method-summary"></div>
-  <h4><a href="#Default">Default</a></h4>
+  <h4><a href="#HistoryData">HistoryData</a></h4>
   <ul>
   <li><a href="#historyDataApiHistoryDataGet"><code><span class="http-method">get</span> /api/history_data</code></a></li>
+  </ul>
+  <h4><a href="#ProcessorSettings">ProcessorSettings</a></h4>
+  <ul>
   <li><a href="#processorSettingsApiProcessorSettingsGet"><code><span class="http-method">get</span> /api/processor_settings</code></a></li>
-  <li><a href="#targetDataApiTargetDataGet"><code><span class="http-method">get</span> /api/target_data</code></a></li>
   <li><a href="#updateProcessorSettingsApiProcessorSettingsPatch"><code><span class="http-method">patch</span> /api/processor_settings</code></a></li>
   </ul>
+  <h4><a href="#RealtimeData">RealtimeData</a></h4>
+  <ul>
+  <li><a href="#targetDataApiTargetDataGet"><code><span class="http-method">get</span> /api/target_data</code></a></li>
+  </ul>
 
-  <h1><a name="Default">Default</a></h1>
+  <h1><a name="HistoryData">HistoryData</a></h1>
   <div class="method"><a name="historyDataApiHistoryDataGet"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
@@ -221,9 +229,8 @@ specified radius of the given latitude and longitude. If since_timestamp_utc
 is specified, then only data that has been collected or updated since that
 time will be returned. If since_timestamp_utc is not specified, then all the
 data in the radius will be returned.</p>
-<p>Serializing to JSON is slow, so about 500-2000 records is a good
-limit to use for pagination. The limit and skip parameters can be used to
-paginate through the data. The total number of records available is returned
+<p>The limit and skip parameters can be used to paginate through the data. The
+total number of records available is returned
 in the X-Grids-Count header.</p>
 </div>
 
@@ -335,6 +342,7 @@ in the X-Grids-Count header.</p>
         <a href="#HTTPValidationError">HTTPValidationError</a>
   </div> <!-- method -->
   <hr/>
+  <h1><a name="ProcessorSettings">ProcessorSettings</a></h1>
   <div class="method"><a name="processorSettingsApiProcessorSettingsGet"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
@@ -380,6 +388,83 @@ in the X-Grids-Count header.</p>
         <a href="#ProcessorSettings">ProcessorSettings</a>
   </div> <!-- method -->
   <hr/>
+  <div class="method"><a name="updateProcessorSettingsApiProcessorSettingsPatch"/>
+    <div class="method-path">
+    <a class="up" href="#__Methods">Up</a>
+    <pre class="patch"><code class="huge"><span class="http-method">patch</span> /api/processor_settings</code></pre></div>
+    <div class="method-summary">Change the current processor settings (<span class="nickname">updateProcessorSettingsApiProcessorSettingsPatch</span>)</div>
+    <div class="method-notes"><p>Update the current processor settings.</p>
+<p>This endpoint is used to change the current processor settings. The settings
+included in the request will be updated, the rest will be left unchanged.</p>
+</div>
+
+
+    <h3 class="field-label">Consumes</h3>
+    This API call consumes the following media types via the <span class="header">Content-Type</span> request header:
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Request body</h3>
+    <div class="field-items">
+      <div class="param">ProcessorSettingsUpdate <a href="#ProcessorSettingsUpdate">ProcessorSettingsUpdate</a> (required)</div>
+
+      <div class="param-desc"><span class="param-type">Body Parameter</span> &mdash;  </div>
+
+    </div>  <!-- field-items -->
+
+
+
+
+    <h3 class="field-label">Return type</h3>
+    <div class="return-type">
+      <a href="#ProcessorSettings">ProcessorSettings</a>
+      
+    </div>
+
+    <!--Todo: process Response Object and its headers, schema, examples -->
+
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>{
+  "current_squelch_db" : 5.962133916683182,
+  "minimum_squelch_db" : 6.027456183070403,
+  "timestamp_utc" : 0.8008281904610115,
+  "maximum_squelch_db" : 1.4658129805029452,
+  "detect_bottom_enabled" : true,
+  "auto_squelch_mode_enabled" : true
+}</code></pre>
+    <h3 class="field-label">Example data</h3>
+    <div class="example-data-content-type">Content-Type: application/json</div>
+    <pre class="example"><code>{
+  "detail" : [ {
+    "msg" : "msg",
+    "loc" : [ "ValidationError_loc_inner", "ValidationError_loc_inner" ],
+    "type" : "type"
+  }, {
+    "msg" : "msg",
+    "loc" : [ "ValidationError_loc_inner", "ValidationError_loc_inner" ],
+    "type" : "type"
+  } ]
+}</code></pre>
+
+    <h3 class="field-label">Produces</h3>
+    This API call produces the following media types according to the <span class="header">Accept</span> request header;
+    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
+    <ul>
+      <li><code>application/json</code></li>
+    </ul>
+
+    <h3 class="field-label">Responses</h3>
+    <h4 class="field-label">200</h4>
+    Successful Response
+        <a href="#ProcessorSettings">ProcessorSettings</a>
+    <h4 class="field-label">422</h4>
+    Validation Error
+        <a href="#HTTPValidationError">HTTPValidationError</a>
+  </div> <!-- method -->
+  <hr/>
+  <h1><a name="RealtimeData">RealtimeData</a></h1>
   <div class="method"><a name="targetDataApiTargetDataGet"/>
     <div class="method-path">
     <a class="up" href="#__Methods">Up</a>
@@ -470,82 +555,6 @@ as well as the latest detections from the latest ping on any bottom targets.</p>
     <h4 class="field-label">200</h4>
     Successful Response
         <a href="#TargetData">TargetData</a>
-  </div> <!-- method -->
-  <hr/>
-  <div class="method"><a name="updateProcessorSettingsApiProcessorSettingsPatch"/>
-    <div class="method-path">
-    <a class="up" href="#__Methods">Up</a>
-    <pre class="patch"><code class="huge"><span class="http-method">patch</span> /api/processor_settings</code></pre></div>
-    <div class="method-summary">Change the current processor settings (<span class="nickname">updateProcessorSettingsApiProcessorSettingsPatch</span>)</div>
-    <div class="method-notes"><p>Update the current processor settings.</p>
-<p>This endpoint is used to change the current processor settings. The settings
-included in the request will be updated, the rest will be left unchanged.</p>
-</div>
-
-
-    <h3 class="field-label">Consumes</h3>
-    This API call consumes the following media types via the <span class="header">Content-Type</span> request header:
-    <ul>
-      <li><code>application/json</code></li>
-    </ul>
-
-    <h3 class="field-label">Request body</h3>
-    <div class="field-items">
-      <div class="param">ProcessorSettingsUpdate <a href="#ProcessorSettingsUpdate">ProcessorSettingsUpdate</a> (required)</div>
-
-      <div class="param-desc"><span class="param-type">Body Parameter</span> &mdash;  </div>
-
-    </div>  <!-- field-items -->
-
-
-
-
-    <h3 class="field-label">Return type</h3>
-    <div class="return-type">
-      <a href="#ProcessorSettings">ProcessorSettings</a>
-      
-    </div>
-
-    <!--Todo: process Response Object and its headers, schema, examples -->
-
-    <h3 class="field-label">Example data</h3>
-    <div class="example-data-content-type">Content-Type: application/json</div>
-    <pre class="example"><code>{
-  "current_squelch_db" : 5.962133916683182,
-  "minimum_squelch_db" : 6.027456183070403,
-  "timestamp_utc" : 0.8008281904610115,
-  "maximum_squelch_db" : 1.4658129805029452,
-  "detect_bottom_enabled" : true,
-  "auto_squelch_mode_enabled" : true
-}</code></pre>
-    <h3 class="field-label">Example data</h3>
-    <div class="example-data-content-type">Content-Type: application/json</div>
-    <pre class="example"><code>{
-  "detail" : [ {
-    "msg" : "msg",
-    "loc" : [ "ValidationError_loc_inner", "ValidationError_loc_inner" ],
-    "type" : "type"
-  }, {
-    "msg" : "msg",
-    "loc" : [ "ValidationError_loc_inner", "ValidationError_loc_inner" ],
-    "type" : "type"
-  } ]
-}</code></pre>
-
-    <h3 class="field-label">Produces</h3>
-    This API call produces the following media types according to the <span class="header">Accept</span> request header;
-    the media type will be conveyed by the <span class="header">Content-Type</span> response header.
-    <ul>
-      <li><code>application/json</code></li>
-    </ul>
-
-    <h3 class="field-label">Responses</h3>
-    <h4 class="field-label">200</h4>
-    Successful Response
-        <a href="#ProcessorSettings">ProcessorSettings</a>
-    <h4 class="field-label">422</h4>
-    Validation Error
-        <a href="#HTTPValidationError">HTTPValidationError</a>
   </div> <!-- method -->
   <hr/>
 
