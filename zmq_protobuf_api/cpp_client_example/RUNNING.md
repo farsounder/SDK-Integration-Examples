@@ -9,7 +9,7 @@ SDKMessageExample folder.
 
 ### Ubuntu
 This version runs was tested using Ubuntu on WSL2, detailed instructions for
-setting up are in the [ubuntu folder](/ubuntu/readme.md).
+setting up are in the [ubuntu folder](/zmq_protobuf_api/cpp_client_example/ubuntu/readme.md).
 
 ### Docker
 Instructions for running a containerized version of the linux example [here](https://github.com/farsounder/SDKMessageExample/tree/master/ubuntu#running-in-docker-container)
