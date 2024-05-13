@@ -32,7 +32,7 @@ Note the location of libzmq. We need this to link our C++ code against when we
 compile.
 
 There is a simple example from the 0MQ docs in:
-[/ubuntu/examples/hello_world_zmq](/ubuntu/examples/hello_world_zmq) that sets up a req/reply 
+[/ubuntu/examples/hello_world_zmq](/zmq_protobuf_api/cpp_client_example/ubuntu/examples/hello_world_zmq) that sets up a req/reply 
 verison of hello world on a tcp port.
 Compile each file (sender.cpp and receiver.cpp): 
 ```bash
