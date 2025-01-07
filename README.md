@@ -43,3 +43,6 @@ to connect to the actual hardware, a standard "navigation" installation of
 SonaSoft is required.
 
 If you have any questions, suggestions, or recommendations, please feel free to email: service@farsounder.com.
+
+## Other Integrations
+- The Technische Universität Berlin has created a ROS package for interfacing with SonaSoft™ via the ZeroMQ/Protobuf API. You can find it [here](https://git.tu-berlin.de/farsounder_directories).
