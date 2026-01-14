@@ -34,6 +34,15 @@ SonaSoft™ is installed on, you can find them by starting SonaSoft and
 going to http://localhost:3000/docs in your browser, or view them in the GH Pages
 [for this repo](https://farsounder.github.io/SDK-Integration-Examples/).
 
+> [!NOTE]
+> In 4.2.x, these two APIs are mutually exclusive - it was assumed that
+only one or the other would be used. The default was also switched to the
+JSON over HTTP version. If running 4.2.x, in order to use the Protobuf/ZMQ
+API, remove the "--http-nav-api" argument from the launcher in the SDK
+package. This assumption is relaxed in an upcoming yet to be released version.
+In 4.3+ any combination of them can be run together, at the cost of more
+resources.
+
 ## Playing back recorded data w/ SonaSoft™ SDK
 The FarSounderSDK package (can be obtained by contacting us if you do not have 
 it already) contains an "SDK Version" of SonaSoft
