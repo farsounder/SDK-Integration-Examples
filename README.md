@@ -53,5 +53,25 @@ SonaSoft is required.
 
 If you have any questions, suggestions, or recommendations, please feel free to email: service@farsounder.com.
 
-## Other Integrations
+## Other Integrations / Clients
 - The Technische Universität Berlin has created a ROS package for interfacing with SonaSoft™ via the ZeroMQ/Protobuf API. You can find it [here](https://git.tu-berlin.de/farsounder_directories).
+
+
+## API comparison
+
+### Why use one over the other?
+The JSON option was added by popular request, mainly regarding higher
+integration complexity of the zeromq/protobuf API (despite more efficient
+message size). It will be expanded in an upcoming release to expose more
+functionality, while the protobuf API will only receive maintainence updates.
+
+| Category | Protobuf / ZMQ | JSON over HTTP "REST" API |
+| --- | --- | --- |
+| Transport | ZeroMQ sockets | HTTP |
+| Data format | Protocol Buffers | JSON |
+| Performance | Faster, more efficient | Simpler, less efficient |
+| Integration complexity | Higher (additional deps) | Lower (web-friendly) |
+| Docs location | [IDD](https://static1.squarespace.com/static/60cce3169290423b889a1b09/t/669e7fb7eb50b43d4e2cfe2e/1721663415836/F33583-FarSounder_IDD_4.1.1.pdf) and the [nav_api.proto header](zmq_protobuf_api/cpp_client_example/windows/SDKMessageExample/proto-files/nav_api.proto) | Live docs at `http://localhost:3000/docs` (when you launch demo or static [here](https://farsounder.github.io/SDK-Integration-Examples/)) |
+| Access history data | ❌ | ✅ |
+| Access target data | ✅  | ✅ |
+| Change processor Settings | ✅ | ✅ |
