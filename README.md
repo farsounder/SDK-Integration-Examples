@@ -1,11 +1,11 @@
-# Minimal SDK Example
+# Minimal SonaSoft API Integation Example
 
 ## Two methods of communicating with SonaSoft™
 There are two methods available to communicate with SonaSoft™. The first uses
 messages that are serialized using Google's Protocol Buffers sent over ZeroMQ
 sockets. The second uses an HTTP API that sends and receives JSON.
 
-## Option 1: Protobuf/ZMQ SonaSoft™ SDK message passing
+## Option 1: Protobuf/ZMQ API
 The first option for integration is to use send and receive Protobuf messages over ZeroMQ. There are client libraries for both ZeroMQ and Protobuf in many 
 different languages. And you can find specific information about our API in the
 Interface Design Definition available on the
@@ -25,7 +25,7 @@ C++ program that connects to SonaSoft™ and receives messages from it, there is
 an example for Ubuntu and Windows, and a dockerfile for running the example in
 an Ubuntu container.
 
-## Option 2: JSON over HTTP API
+## Option 2: JSON over HTTP ["REST"](https://htmx.org/essays/how-did-rest-come-to-mean-the-opposite-of-rest/) API
 The second option for integration is to use the JSON over HTTP API. This is a simple
 API server that runs on the machine that SonaSoft™ is installed on. Sending
 JSON over HTTP is much simpler than using ZeroMQ and Protobuf, but it is not
