@@ -53,8 +53,8 @@ SonaSoft is required.
 
 If you have any questions, suggestions, or recommendations, please feel free to email: service@farsounder.com.
 
-## Higher level clients
-- C++ API client (WIP): https://github.com/farsounder/farsounder-cpp-client
+## Higher level clients / other interfaces
+- C++ API client (WIP): [Minimal example](https://github.com/farsounder/farsounder-cpp-client-example) and [actual client](https://github.com/farsounder/farsounder-cpp-client)
 - Python API client (WIP): https://github.com/farsounder/farsounder-python-client
 - The Technische Universität Berlin has created a ROS package for interfacing with SonaSoft™ via the ZeroMQ/Protobuf API. You can find it [here](https://git.tu-berlin.de/farsounder_directories).
 
