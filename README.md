@@ -55,7 +55,7 @@ If you have any questions, suggestions, or recommendations, please feel free to 
 
 ## Higher level clients / other interfaces
 - C++ API client (WIP): [Minimal example](https://github.com/farsounder/farsounder-cpp-client-example) and [actual client](https://github.com/farsounder/farsounder-cpp-client)
-- Python API client (WIP): https://github.com/farsounder/farsounder-python-client
+- Python API client (WIP): https://github.com/farsounder/farsounder-python-client - and [an example](https://github.com/farsounder/farsounder-drawing-example) showing data in [Rerun](rerun.io)
 - The Technische Universität Berlin has created a ROS package for interfacing with SonaSoft™ via the ZeroMQ/Protobuf API. You can find it [here](https://git.tu-berlin.de/farsounder_directories).
 
 
