@@ -1,0 +1,63 @@
+# General editor files
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+*.swp
+*.swo
+*.suo
+
+# Node / TypeScript
+node_modules/
+dist/
+dist-ssr/
+*.tsbuildinfo
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+# python generated files
+generated
+
+# CMake / native build outputs
+build/
+build-*/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+compile_commands.json
+*.obj
+*.o
+*.pdb
+*.ipdb
+*.iobj
+*.ilk
+*.exe
+*.out
+*.a
+*.so
+*.dll
+*.dylib
+
+# Visual Studio / generated native outputs
+.vs/
+x64/
+Debug/
+Release/
+*.VC.db
+*.VC.opendb
+*.tlog
+*.recipe
+*.lastbuildstate
+ipch/
+
+# Generated protobuf outputs
+*.pb.cc
+*.pb.h
+*_pb2.py
+
+# test file
+address_book.bin

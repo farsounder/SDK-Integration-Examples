@@ -1,0 +1,9 @@
+[project]
+name = "sonasoft-python-sdk-simple-example"
+version = "0.1.0"
+description = "Minimal Python SDK example for SonaSoft"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "farsounder>=0.1.1",
+]
