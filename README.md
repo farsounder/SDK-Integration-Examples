@@ -22,9 +22,9 @@ If you want the easiest path to accessing data, start with the SDK examples:
 If you want to integrate with the APIs directly for full control of receive
 threading, etc:
 
-- `direct_api/http_json/typescript/`
 - `direct_api/zmq_protobuf/cpp/`
 - `direct_api/zmq_protobuf/python/`
+- Interactive Swagger docs at `http://localhost:3000/docs` when the SonaSoft demo is running
 
 If you're having a problem with protobuf or zeromq and you want to test one piece at a time:
 
