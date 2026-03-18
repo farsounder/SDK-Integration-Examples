@@ -78,14 +78,14 @@ They are taken from the ZMQ and protobuf docs.
 | Setup complexity | Lowest | Low | Highest |
 | Transport details | Abstracted away | HTTP/Websocket | ZeroMQ sockets |
 | Data format | Native client types | JSON | Protocol Buffers |
-| Processor Controls | Yes | Yes | Yes |
-| Live seafloor detections | Yes | Yes | Yes |
-| Live in-water detections | Yes | Yes | Yes |
-| Gridded history data | Yes | Yes | No |
-| Hydrophone Timeseries Data | Yes | No | Yes |
-| Third Party Targets (Sea.AI, etc) | No | Yes | No |
-| SonaSoft LT Alarm Config | No | Yes | No |
-| Filtered NMEA Stream Data | No | Yes | No |
+| Processor Controls | ✅ | ✅ | ✅ |
+| Live seafloor detections | ✅ | ✅ | ✅ |
+| Live in-water detections | ✅ | ✅ | ✅ |
+| Gridded history data | ✅ | ✅ | ❌ |
+| Hydrophone Timeseries Data | ✅ | ❌ | ✅ |
+| Third Party Targets (Sea.AI, etc) | ❌ | ✅ | ❌ |
+| SonaSoft LT Alarm Config | ❌ | ✅ | ❌ |
+| Filtered NMEA Stream Data | ❌ | ✅ | ❌ |
 
 ## Notes
 
