@@ -44,7 +44,7 @@ For reference, the SDK clients themselves live in their own repos:
 - C++ client: [farsounder-cpp-client](https://github.com/farsounder/farsounder-cpp-client)
 - Python client: [farsounder-python-client](https://github.com/farsounder/farsounder-python-client)
 
-## Other Clients
+### Other Clients
 - The Technische Universität Berlin has created a ROS2 package for interfacing with SonaSoft™ via the ZeroMQ/Protobuf API. You can find it [here](https://git.tu-berlin.de/farsounder_directories)
 
 ### Use The Direct APIs
