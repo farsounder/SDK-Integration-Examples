@@ -1,0 +1,116 @@
+// Protobuf message specification
+// Copyright FarSounder, Inc. All rights reserved.
+//
+// These messages are made freely and publicly available to enable integration
+// of FarSounder data into third party systems. Both non-commercial and
+// commercial use cases require the integrator to agree to FarSounder’s
+// navigation SDK licensing agreement. Visit
+// https://www.farsounder.com/software-development-kit for more information.
+//
+// These files may be distributed as long as this header is kept intact.
+//
+// Each of the messages below contains the parsed value from the also included
+// NmeaData member. Note that the type of value has selected in FarSounder's
+// SonaSoft software.
+
+syntax = "proto2";
+
+import "proto/nmea.proto";
+import "proto/time.proto";
+
+package proto.nav_info;
+
+option optimize_for = LITE_RUNTIME;
+
+
+message Depth {
+  optional double depth = 1;
+  optional nmea.NmeaData nmea = 2;
+}
+
+
+message Heading {
+  enum Type {
+    OBSOLETE_kSensor = 0;
+    OBSOLETE_kMagnetic = 1;
+    kTrue = 2;
+    kManufactured = 3;  // This type indicates that the heading value does NOT
+                        // come from an NMEA sentence.  Instead, it was
+                        // interpolated during beamforming.
+  }
+  optional double heading = 1;
+  optional Type type = 2;
+  optional nmea.NmeaData nmea = 3;
+}
+
+
+message Position {
+  optional double lat = 1;
+  optional double lon = 2;
+  optional nmea.NmeaData nmea = 7;
+}
+
+
+message Speed {
+  optional double speed = 1;
+  optional nmea.NmeaData nmea = 2;
+}
+
+
+message DualSpeed {
+  optional float ground_transversal = 1;
+  optional float ground_longitudinal = 2;
+  optional nmea.NmeaData nmea = 3;
+}
+
+
+message RateOfTurn {
+  optional float rot = 1;
+  optional nmea.NmeaData nmea = 2;
+}
+
+
+message CourseOverGround {
+  optional float true_heading = 1;
+  optional nmea.NmeaData nmea = 2;
+}
+
+
+message AIS {
+  optional nmea.NmeaData nmea = 1;
+}
+
+
+message ARPA {
+  optional nmea.NmeaData nmea = 1;
+}
+
+
+message UTCTime {
+  optional time.Time time = 1;
+}
+
+
+message LocalTime {
+  optional time.Time time = 1;
+}
+
+
+message FilteredState {
+  optional time.Time time = 7;
+  optional bool filter_enabled = 8;
+
+  // (Potentially) filtered position information.
+  optional double lat = 1;
+  optional double lon = 2;
+  optional bool latlon_is_filtered = 9;
+
+  // (Potentially) filtered heading information.
+  optional double heading = 4;
+  optional bool heading_is_filtered = 10;
+
+  // Unfiltered navigation information.
+  optional double speed = 3;
+  optional double course = 5;
+  optional double rot = 6;
+}

@@ -1,0 +1,25 @@
+// Protobuf message specification
+// Copyright FarSounder, Inc. All rights reserved.
+//
+// These messages are made freely and publicly available to enable integration
+// of FarSounder data into third party systems. Both non-commercial and
+// commercial use cases require the integrator to agree to FarSounder’s
+// navigation SDK licensing agreement. Visit
+// https://www.farsounder.com/software-development-kit for more information.
+//
+// These files may be distributed as long as this header is kept intact.
+
+syntax = "proto2";
+
+import "proto/time.proto";
+
+package proto.nmea;
+
+option optimize_for = LITE_RUNTIME;
+
+// Basic message container for NMEA strings
+message NmeaData {
+  optional time.Time time = 1;  // when sentence was collected
+  optional time.Time playback_time = 3;  // when it was produced by playback
+  optional string sentence = 2;  // the nmea sentence
+}
