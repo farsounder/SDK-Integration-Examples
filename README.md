@@ -44,9 +44,6 @@ For reference, the SDK clients themselves live in their own repos:
 - C++ client: [farsounder-cpp-client](https://github.com/farsounder/farsounder-cpp-client)
 - Python client: [farsounder-python-client](https://github.com/farsounder/farsounder-python-client)
 
-### Other Clients
-- The Technische Universität Berlin has created a ROS2 package for interfacing with SonaSoft™ via the ZeroMQ/Protobuf API. You can find it [here](https://git.tu-berlin.de/farsounder_directories)
-
 ### Use The Direct APIs
 
 SonaSoft exposes two direct APIs:
@@ -58,7 +55,10 @@ JSON over HTTP/Websocket is usually the easiest direct path just because it has
 become so common-place and most languages have some first class support for it. The 
 ZeroMQ/Protobuf option makes sense for highest performance.
 
-### Use The Reference Examples
+### Other Clients
+- The Technische Universität Berlin has created a ROS2 package for interfacing with SonaSoft™ via the ZeroMQ/Protobuf API. You can find it [here](https://git.tu-berlin.de/farsounder_directories)
+
+### Simple ZMQ/Protobuf Reference Examples
 
 The `reference/` examples are intentionally small. They are meant to help you
 answer questions like:
@@ -68,7 +68,7 @@ answer questions like:
 - Can I do a minimal request/reply round trip?
 - Can I receive a pub/sub message at all?
 
-They are taken from the ZMQ and protobuf docs.
+They are taken directly from the ZMQ and protobuf docs.
 
 ## Comparison of Integration Options
 
