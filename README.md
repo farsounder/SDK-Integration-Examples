@@ -24,7 +24,7 @@ threading, etc:
 
 - `direct_api/zmq_protobuf/cpp/`
 - `direct_api/zmq_protobuf/python/`
-- Interactive Swagger docs at `http://localhost:3000/docs` when the SonaSoft demo is running
+- For the direct JSON API, there are interactive Swagger docs at `http://localhost:3000/docs` when the SonaSoft demo is running
 
 If you're having a problem with protobuf or zeromq and you want to test one piece at a time:
 
