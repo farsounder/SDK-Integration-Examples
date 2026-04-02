@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.21)
 
 include(FetchContent)
 
-project(sonasoft_sdk_cpp_imgui_viewer_example LANGUAGES CXX)
+project(sonasoft_sdk_cpp_imgui_viewer_example LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -34,12 +34,19 @@ FetchContent_Declare(
   DOWNLOAD_EXTRACT_TIMESTAMP TRUE
 )
 
+FetchContent_Declare(
+  glad
+  URL https://github.com/Dav1dde/glad/archive/refs/tags/v2.0.8.zip
+  DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+  SOURCE_SUBDIR cmake
+)
+
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
 
-FetchContent_MakeAvailable(farsounder_sdk glfw)
+FetchContent_MakeAvailable(farsounder_sdk glfw glad)
 
 if(POLICY CMP0169)
   cmake_policy(SET CMP0169 OLD)
@@ -54,6 +61,8 @@ list(APPEND CMAKE_PREFIX_PATH ${farsounder_sdk_SOURCE_DIR})
 
 find_package(OpenGL REQUIRED)
 find_package(farsounder REQUIRED)
+
+glad_add_library(glad_gl_core_45 STATIC REPRODUCIBLE LOADER API gl:core=4.5)
 
 set(farsounder_target "")
 if(TARGET farsounder::farsounder)
@@ -70,7 +79,7 @@ add_library(imgui STATIC
   ${imgui_SOURCE_DIR}/imgui_tables.cpp
   ${imgui_SOURCE_DIR}/imgui_widgets.cpp
   ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
-  ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl2.cpp
+  ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
 )
 
 target_include_directories(
@@ -80,7 +89,9 @@ target_include_directories(
     ${imgui_SOURCE_DIR}/backends
 )
 
-target_link_libraries(imgui PUBLIC glfw OpenGL::GL)
+target_compile_definitions(imgui PRIVATE IMGUI_IMPL_OPENGL_LOADER_GLAD)
+
+target_link_libraries(imgui PUBLIC glfw glad_gl_core_45 OpenGL::GL)
 
 add_executable(
   sonasoft_sdk_cpp_imgui_viewer_example
@@ -97,6 +108,7 @@ target_link_libraries(
   sonasoft_sdk_cpp_imgui_viewer_example
   PRIVATE
     ${farsounder_target}
+    glad_gl_core_45
     imgui
     glfw
     OpenGL::GL

@@ -5,7 +5,8 @@ the C++ simple example. It's only meant to demo getting the data and plotting
 in a self contained example.
 
 It uses the higher-level `farsounder` C++ client library together
-with Dear ImGui, GLFW, and OpenGL to present a live 3D view of `TargetData`.
+with Dear ImGui, GLFW, GLAD, and OpenGL to present a live 3D view of
+`TargetData`.
 
 It subscribes to `TargetData`, converts bottom and target bins into a local
 coordinate frame, and renders them as colored point clouds in a window.
@@ -18,8 +19,8 @@ cmake --build build --config Release
 ```
 
 Like `simple_example`, this downloads the packaged farsounder SDK release with
-CMake. It also fetches GLFW and Dear ImGui during configure so the first time
-might be slower to set up.
+CMake. It also fetches GLFW, Dear ImGui, and GLAD during configure so the
+first time might be slower to set up.
 
 On Windows, the build copies `farsounder.dll` next to the example executable.
 

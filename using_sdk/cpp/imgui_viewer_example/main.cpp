@@ -3,18 +3,24 @@
 #include <atomic>
 #include <chrono>
 #include <cmath>
+#include <cstddef>
+#include <cstdint>
 #include <cstdio>
 #include <exception>
 #include <iostream>
+#include <limits>
 #include <memory>
 #include <mutex>
 #include <string>
+#include <vector>
 
+#define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
+#include <glad/gl.h>
 
 #include "imgui.h"
 #include "backends/imgui_impl_glfw.h"
-#include "backends/imgui_impl_opengl2.h"
+#include "backends/imgui_impl_opengl3.h"
 
 #include "farsounder/config.hpp"
 #include "farsounder/subscriber.hpp"
@@ -30,6 +36,12 @@ using Clock = std::chrono::steady_clock;
 constexpr float kDefaultPointSize = 6.0F;
 constexpr float kMinPointSize = 2.0F;
 constexpr float kMaxPointSize = 16.0F;
+constexpr char kImGuiGlslVersion[] = "#version 450 core";
+
+struct ColorVertex {
+  viewer::Vec3 position;
+  viewer::Vec3 color;
+};
 
 struct OrbitCamera {
   viewer::Vec3 target{0.0F, 0.0F, 0.0F};
@@ -142,69 +154,339 @@ void ApplyCameraControls(const ImGuiIO& io, OrbitCamera* camera) {
   }
 }
 
-void RenderAxes(float scale) {
-  glLineWidth(2.0F);
-  glBegin(GL_LINES);
-  glColor3f(0.95F, 0.35F, 0.35F);
-  glVertex3f(0.0F, 0.0F, 0.0F);
-  glVertex3f(scale, 0.0F, 0.0F);
-  glColor3f(0.35F, 0.95F, 0.45F);
-  glVertex3f(0.0F, 0.0F, 0.0F);
-  glVertex3f(0.0F, scale, 0.0F);
-  glColor3f(0.40F, 0.55F, 0.98F);
-  glVertex3f(0.0F, 0.0F, 0.0F);
-  glVertex3f(0.0F, 0.0F, scale);
-  glEnd();
+ColorVertex MakeVertex(float x, float y, float z, float r, float g, float b) {
+  return {{x, y, z}, {r, g, b}};
 }
 
-void RenderPointCloud(const std::vector<viewer::ColorPoint>& points) {
-  glBegin(GL_POINTS);
-  for (const auto& point : points) {
-    glColor3f(point.color.x, point.color.y, point.color.z);
-    glVertex3f(point.position.x, point.position.y, point.position.z);
-  }
-  glEnd();
+std::array<ColorVertex, 6> BuildAxisVertices(float scale) {
+  return {
+      MakeVertex(0.0F, 0.0F, 0.0F, 0.95F, 0.35F, 0.35F),
+      MakeVertex(scale, 0.0F, 0.0F, 0.95F, 0.35F, 0.35F),
+      MakeVertex(0.0F, 0.0F, 0.0F, 0.35F, 0.95F, 0.45F),
+      MakeVertex(0.0F, scale, 0.0F, 0.35F, 0.95F, 0.45F),
+      MakeVertex(0.0F, 0.0F, 0.0F, 0.40F, 0.55F, 0.98F),
+      MakeVertex(0.0F, 0.0F, scale, 0.40F, 0.55F, 0.98F),
+  };
 }
 
-void RenderScene(const viewer::FrameSnapshot& frame, const OrbitCamera& camera,
-                 bool show_bottom, bool show_targets, float point_size,
-                 int framebuffer_width, int framebuffer_height) {
-  glViewport(0, 0, framebuffer_width, framebuffer_height);
-  glClearColor(0.05F, 0.07F, 0.10F, 1.0F);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-  const float aspect_ratio = framebuffer_height > 0
-                                 ? static_cast<float>(framebuffer_width) /
-                                       static_cast<float>(framebuffer_height)
-                                 : 1.0F;
-  const viewer::Mat4 projection = viewer::Perspective(
-      viewer::DegreesToRadians(45.0F), aspect_ratio, 0.1F, 10000.0F);
-  const viewer::Mat4 view = viewer::LookAt(
-      CameraPosition(camera), camera.target, {0.0F, 0.0F, 1.0F});
-
-  glMatrixMode(GL_PROJECTION);
-  glLoadMatrixf(projection.data.data());
-  glMatrixMode(GL_MODELVIEW);
-  glLoadMatrixf(view.data.data());
-
-  glEnable(GL_DEPTH_TEST);
-  glDisable(GL_CULL_FACE);
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  glEnable(GL_POINT_SMOOTH);
-  glPointSize(point_size);
-
-  const float axis_scale =
-      frame.bounds.valid ? std::max(frame.bounds.Radius() * 0.5F, 5.0F) : 5.0F;
-  RenderAxes(axis_scale);
-
-  if (show_bottom) {
-    RenderPointCloud(frame.bottom_points);
+std::string ReadShaderLog(GLuint shader) {
+  GLint log_length = 0;
+  glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &log_length);
+  if (log_length <= 1) {
+    return {};
   }
-  if (show_targets) {
-    RenderPointCloud(frame.target_points);
-  }
+
+  std::vector<GLchar> log(static_cast<std::size_t>(log_length));
+  glGetShaderInfoLog(shader, log_length, nullptr, log.data());
+  return std::string(log.data());
 }
+
+std::string ReadProgramLog(GLuint program) {
+  GLint log_length = 0;
+  glGetProgramiv(program, GL_INFO_LOG_LENGTH, &log_length);
+  if (log_length <= 1) {
+    return {};
+  }
+
+  std::vector<GLchar> log(static_cast<std::size_t>(log_length));
+  glGetProgramInfoLog(program, log_length, nullptr, log.data());
+  return std::string(log.data());
+}
+
+GLuint CompileShader(GLenum shader_type, const char* source,
+                     std::string* error_message) {
+  const GLuint shader = glCreateShader(shader_type);
+  if (shader == 0U) {
+    if (error_message != nullptr) {
+      *error_message = "glCreateShader() failed";
+    }
+    return 0U;
+  }
+
+  glShaderSource(shader, 1, &source, nullptr);
+  glCompileShader(shader);
+
+  GLint compiled = GL_FALSE;
+  glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
+  if (compiled == GL_TRUE) {
+    return shader;
+  }
+
+  if (error_message != nullptr) {
+    *error_message = ReadShaderLog(shader);
+    if (error_message->empty()) {
+      *error_message = "Shader compilation failed";
+    }
+  }
+
+  glDeleteShader(shader);
+  return 0U;
+}
+
+GLuint CreateSceneProgram(std::string* error_message) {
+  static constexpr char kVertexShaderSource[] = R"(#version 450 core
+layout(location = 0) in vec3 in_position;
+layout(location = 1) in vec3 in_color;
+
+uniform mat4 u_projection;
+uniform mat4 u_view;
+uniform float u_point_size;
+
+out vec3 v_color;
+
+void main() {
+  gl_Position = u_projection * u_view * vec4(in_position, 1.0);
+  gl_PointSize = u_point_size;
+  v_color = in_color;
+}
+)";
+
+  static constexpr char kFragmentShaderSource[] = R"(#version 450 core
+in vec3 v_color;
+
+out vec4 out_color;
+
+void main() {
+  out_color = vec4(v_color, 1.0);
+}
+)";
+
+  const GLuint vertex_shader =
+      CompileShader(GL_VERTEX_SHADER, kVertexShaderSource, error_message);
+  if (vertex_shader == 0U) {
+    return 0U;
+  }
+
+  const GLuint fragment_shader =
+      CompileShader(GL_FRAGMENT_SHADER, kFragmentShaderSource, error_message);
+  if (fragment_shader == 0U) {
+    glDeleteShader(vertex_shader);
+    return 0U;
+  }
+
+  const GLuint program = glCreateProgram();
+  if (program == 0U) {
+    if (error_message != nullptr) {
+      *error_message = "glCreateProgram() failed";
+    }
+    glDeleteShader(vertex_shader);
+    glDeleteShader(fragment_shader);
+    return 0U;
+  }
+
+  glAttachShader(program, vertex_shader);
+  glAttachShader(program, fragment_shader);
+  glLinkProgram(program);
+
+  glDeleteShader(vertex_shader);
+  glDeleteShader(fragment_shader);
+
+  GLint linked = GL_FALSE;
+  glGetProgramiv(program, GL_LINK_STATUS, &linked);
+  if (linked == GL_TRUE) {
+    return program;
+  }
+
+  if (error_message != nullptr) {
+    *error_message = ReadProgramLog(program);
+    if (error_message->empty()) {
+      *error_message = "Program link failed";
+    }
+  }
+
+  glDeleteProgram(program);
+  return 0U;
+}
+
+class ColorGeometryBuffer {
+ public:
+  ColorGeometryBuffer() = default;
+  ~ColorGeometryBuffer() { Shutdown(); }
+
+  ColorGeometryBuffer(const ColorGeometryBuffer&) = delete;
+  ColorGeometryBuffer& operator=(const ColorGeometryBuffer&) = delete;
+
+  bool Initialize() {
+    glCreateVertexArrays(1, &vao_);
+    glCreateBuffers(1, &vbo_);
+    if (vao_ == 0U || vbo_ == 0U) {
+      return false;
+    }
+
+    glVertexArrayVertexBuffer(vao_, 0, vbo_, 0, sizeof(ColorVertex));
+
+    glEnableVertexArrayAttrib(vao_, 0);
+    glVertexArrayAttribFormat(vao_, 0, 3, GL_FLOAT, GL_FALSE,
+                              static_cast<GLuint>(offsetof(ColorVertex, position)));
+    glVertexArrayAttribBinding(vao_, 0, 0);
+
+    glEnableVertexArrayAttrib(vao_, 1);
+    glVertexArrayAttribFormat(vao_, 1, 3, GL_FLOAT, GL_FALSE,
+                              static_cast<GLuint>(offsetof(ColorVertex, color)));
+    glVertexArrayAttribBinding(vao_, 1, 0);
+    return true;
+  }
+
+  void Shutdown() {
+    if (vbo_ != 0U) {
+      glDeleteBuffers(1, &vbo_);
+      vbo_ = 0U;
+    }
+    if (vao_ != 0U) {
+      glDeleteVertexArrays(1, &vao_);
+      vao_ = 0U;
+    }
+    vertex_count_ = 0;
+    capacity_bytes_ = 0;
+    staging_vertices_.clear();
+  }
+
+  void Upload(const ColorVertex* vertices, std::size_t vertex_count) {
+    vertex_count_ = vertex_count;
+    const GLsizeiptr required_bytes = static_cast<GLsizeiptr>(
+        vertex_count * sizeof(ColorVertex));
+    if (required_bytes > capacity_bytes_) {
+      capacity_bytes_ =
+          std::max(required_bytes, capacity_bytes_ > 0 ? capacity_bytes_ * 2 : required_bytes);
+      glNamedBufferData(vbo_, capacity_bytes_, nullptr, GL_DYNAMIC_DRAW);
+    }
+    if (required_bytes > 0 && vertices != nullptr) {
+      glNamedBufferSubData(vbo_, 0, required_bytes, vertices);
+    }
+  }
+
+  void Upload(const std::vector<viewer::ColorPoint>& points) {
+    staging_vertices_.clear();
+    staging_vertices_.reserve(points.size());
+    for (const auto& point : points) {
+      staging_vertices_.push_back({point.position, point.color});
+    }
+    Upload(staging_vertices_.data(), staging_vertices_.size());
+  }
+
+  void Draw(GLenum primitive_mode) const {
+    if (vao_ == 0U || vertex_count_ == 0U) {
+      return;
+    }
+    glBindVertexArray(vao_);
+    glDrawArrays(primitive_mode, 0, static_cast<GLsizei>(vertex_count_));
+  }
+
+ private:
+  GLuint vao_{0U};
+  GLuint vbo_{0U};
+  std::size_t vertex_count_{0U};
+  GLsizeiptr capacity_bytes_{0};
+  std::vector<ColorVertex> staging_vertices_;
+};
+
+class SceneRenderer {
+ public:
+  SceneRenderer() = default;
+  ~SceneRenderer() { Shutdown(); }
+
+  SceneRenderer(const SceneRenderer&) = delete;
+  SceneRenderer& operator=(const SceneRenderer&) = delete;
+
+  bool Initialize(std::string* error_message) {
+    program_ = CreateSceneProgram(error_message);
+    if (program_ == 0U) {
+      return false;
+    }
+
+    projection_location_ = glGetUniformLocation(program_, "u_projection");
+    view_location_ = glGetUniformLocation(program_, "u_view");
+    point_size_location_ = glGetUniformLocation(program_, "u_point_size");
+    if (projection_location_ < 0 || view_location_ < 0 || point_size_location_ < 0) {
+      if (error_message != nullptr) {
+        *error_message = "Failed to locate scene shader uniforms";
+      }
+      return false;
+    }
+
+    if (!axis_buffer_.Initialize() || !bottom_points_.Initialize() ||
+        !target_points_.Initialize()) {
+      if (error_message != nullptr) {
+        *error_message = "Failed to initialize OpenGL vertex buffers";
+      }
+      return false;
+    }
+    return true;
+  }
+
+  void Shutdown() {
+    axis_buffer_.Shutdown();
+    bottom_points_.Shutdown();
+    target_points_.Shutdown();
+
+    if (program_ != 0U) {
+      glDeleteProgram(program_);
+      program_ = 0U;
+    }
+    projection_location_ = -1;
+    view_location_ = -1;
+    point_size_location_ = -1;
+  }
+
+  void UploadFrame(const viewer::FrameSnapshot& frame) {
+    bottom_points_.Upload(frame.bottom_points);
+    target_points_.Upload(frame.target_points);
+  }
+
+  void Render(const viewer::FrameSnapshot& frame, const OrbitCamera& camera,
+              bool show_bottom, bool show_targets, float point_size,
+              int framebuffer_width, int framebuffer_height) {
+    glViewport(0, 0, framebuffer_width, framebuffer_height);
+    glClearColor(0.05F, 0.07F, 0.10F, 1.0F);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    const float aspect_ratio = framebuffer_height > 0
+                                   ? static_cast<float>(framebuffer_width) /
+                                         static_cast<float>(framebuffer_height)
+                                   : 1.0F;
+    const viewer::Mat4 projection = viewer::Perspective(
+        viewer::DegreesToRadians(45.0F), aspect_ratio, 0.1F, 10000.0F);
+    const viewer::Mat4 view = viewer::LookAt(
+        CameraPosition(camera), camera.target, {0.0F, 0.0F, 1.0F});
+
+    glEnable(GL_DEPTH_TEST);
+    glDepthMask(GL_TRUE);
+    glDisable(GL_CULL_FACE);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_PROGRAM_POINT_SIZE);
+
+    glUseProgram(program_);
+    glUniformMatrix4fv(projection_location_, 1, GL_FALSE, projection.data.data());
+    glUniformMatrix4fv(view_location_, 1, GL_FALSE, view.data.data());
+    glUniform1f(point_size_location_, std::max(point_size, 1.0F));
+
+    const float axis_scale =
+        frame.bounds.valid ? std::max(frame.bounds.Radius() * 0.5F, 5.0F) : 5.0F;
+    const std::array<ColorVertex, 6> axes = BuildAxisVertices(axis_scale);
+    axis_buffer_.Upload(axes.data(), axes.size());
+    axis_buffer_.Draw(GL_LINES);
+
+    if (show_bottom) {
+      bottom_points_.Draw(GL_POINTS);
+    }
+    if (show_targets) {
+      target_points_.Draw(GL_POINTS);
+    }
+
+    glBindVertexArray(0);
+    glUseProgram(0);
+  }
+
+ private:
+  GLuint program_{0U};
+  GLint projection_location_{-1};
+  GLint view_location_{-1};
+  GLint point_size_location_{-1};
+  ColorGeometryBuffer axis_buffer_;
+  ColorGeometryBuffer bottom_points_;
+  ColorGeometryBuffer target_points_;
+};
 
 class SdkSession {
  public:
@@ -380,6 +662,8 @@ void DrawControlWindow(SdkSession* session, viewer::FrameSnapshot* frame,
     } else {
       if (ImGui::Button("Stop")) {
         session->Stop();
+        *frame = viewer::FrameSnapshot{};
+        *auto_fit_requested = true;
       }
     }
 
@@ -445,8 +729,12 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+#if defined(__APPLE__)
+  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
+#endif
 
   GLFWwindow* window = glfwCreateWindow(1600, 900, "ImGui 3D Viewer Example",
                                         nullptr, nullptr);
@@ -457,6 +745,12 @@ int main(int argc, char** argv) {
   }
 
   glfwMakeContextCurrent(window);
+  if (gladLoadGL(glfwGetProcAddress) == 0) {
+    std::cerr << "Failed to initialize OpenGL loader" << '\n';
+    glfwDestroyWindow(window);
+    glfwTerminate();
+    return 1;
+  }
   glfwSwapInterval(1);
 
   IMGUI_CHECKVERSION();
@@ -465,13 +759,41 @@ int main(int argc, char** argv) {
   io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
   ImGui::StyleColorsDark();
 
-  ImGui_ImplGlfw_InitForOpenGL(window, true);
-  ImGui_ImplOpenGL2_Init();
+  if (!ImGui_ImplGlfw_InitForOpenGL(window, true)) {
+    std::cerr << "Failed to initialize ImGui GLFW backend" << '\n';
+    ImGui::DestroyContext();
+    glfwDestroyWindow(window);
+    glfwTerminate();
+    return 1;
+  }
+
+  if (!ImGui_ImplOpenGL3_Init(kImGuiGlslVersion)) {
+    std::cerr << "Failed to initialize ImGui OpenGL backend" << '\n';
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+    glfwDestroyWindow(window);
+    glfwTerminate();
+    return 1;
+  }
+
+  SceneRenderer renderer;
+  std::string renderer_error;
+  if (!renderer.Initialize(&renderer_error)) {
+    std::cerr << "Failed to initialize scene renderer: " << renderer_error
+              << '\n';
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+    glfwDestroyWindow(window);
+    glfwTerminate();
+    return 1;
+  }
 
   SdkSession session;
   OrbitCamera camera;
   viewer::FrameSnapshot frame;
   std::uint64_t last_sequence = 0;
+  std::uint64_t uploaded_message_count = std::numeric_limits<std::uint64_t>::max();
   bool show_bottom = true;
   bool show_targets = true;
   float point_size = kDefaultPointSize;
@@ -490,7 +812,7 @@ int main(int argc, char** argv) {
       auto_fit_requested = false;
     }
 
-    ImGui_ImplOpenGL2_NewFrame();
+    ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
@@ -508,14 +830,19 @@ int main(int argc, char** argv) {
     int framebuffer_width = 0;
     int framebuffer_height = 0;
     glfwGetFramebufferSize(window, &framebuffer_width, &framebuffer_height);
-    RenderScene(frame, camera, show_bottom, show_targets, point_size,
-                framebuffer_width, framebuffer_height);
-    ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
+    if (frame.message_count != uploaded_message_count) {
+      renderer.UploadFrame(frame);
+      uploaded_message_count = frame.message_count;
+    }
+    renderer.Render(frame, camera, show_bottom, show_targets, point_size,
+                    framebuffer_width, framebuffer_height);
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     glfwSwapBuffers(window);
   }
 
   session.Stop();
-  ImGui_ImplOpenGL2_Shutdown();
+  renderer.Shutdown();
+  ImGui_ImplOpenGL3_Shutdown();
   ImGui_ImplGlfw_Shutdown();
   ImGui::DestroyContext();
   glfwDestroyWindow(window);
