@@ -11,6 +11,15 @@ with Dear ImGui, GLFW, GLAD, and OpenGL to present a live 3D view of
 It subscribes to `TargetData`, converts bottom and target bins into a local
 coordinate frame, and renders them as colored point clouds in a window.
 
+The example is organized so the SDK flow is easy to find first:
+- `main.cpp` shows the top-level example shape.
+- `sdk_session.*` owns the farsounder subscription lifecycle and callbacks.
+- `viewer_state.hpp` converts `TargetData` into the point-cloud snapshot used by
+  the viewer.
+
+Rendering, ImGui, camera behavior, and GLFW/OpenGL setup live in helper files if
+you want to inspect the viewer internals later.
+
 ## Build
 
 ```bash

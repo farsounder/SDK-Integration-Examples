@@ -8,6 +8,12 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+if(MSVC)
+  # The packaged Windows farsounder SDK currently ships release binaries only.
+  # Use the release CRT for all configs so Debug builds stay compatible with it.
+  set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
+endif()
+
 if(WIN32)
   FetchContent_Declare(
     farsounder_sdk
@@ -95,7 +101,12 @@ target_link_libraries(imgui PUBLIC glfw glad_gl_core_45 OpenGL::GL)
 
 add_executable(
   sonasoft_sdk_cpp_imgui_viewer_example
+  gl_scene_renderer.cpp
   main.cpp
+  orbit_camera.cpp
+  sdk_session.cpp
+  viewer_app.cpp
+  viewer_ui.cpp
 )
 
 target_include_directories(
