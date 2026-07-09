@@ -3,7 +3,6 @@ from __future__ import annotations
 import argparse
 import math
 import time
-from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -11,26 +10,12 @@ import numpy as np
 import rasterio
 import utm
 from rasterio.crs import CRS
-from rasterio.transform import from_bounds
+from rasterio.transform import from_origin
 
 from farsounder import config, subscriber
 from farsounder.proto import nav_api_pb2
 
 NODATA = -9999.0
-
-
-@dataclass(frozen=True)
-class BottomSample:
-    easting: float
-    northing: float
-    depth: float
-
-
-@dataclass(frozen=True)
-class TargetSample:
-    easting: float
-    northing: float
-    strength: float
 
 
 def parse_args() -> argparse.Namespace:
@@ -58,8 +43,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--resolution-m",
         type=float,
-        default=1.0,
-        help="Raster cell size in meters (default: 1.0)",
+        default=4.0,
+        help="Raster cell size in meters (default: 4.0)",
     )
     return parser.parse_args()
 
@@ -83,17 +68,6 @@ def boat_position_to_utm(
     return easting, northing, zone_number, zone_letter
 
 
-def rotate_boat_offset_to_world(
-    forward_m: float,
-    right_m: float,
-    heading_deg: float,
-) -> tuple[float, float]:
-    heading_rad = math.radians(heading_deg)
-    east_offset = forward_m * math.sin(heading_rad) + right_m * math.cos(heading_rad)
-    north_offset = forward_m * math.cos(heading_rad) - right_m * math.sin(heading_rad)
-    return east_offset, north_offset
-
-
 def bin_to_utm(
     boat_easting: float,
     boat_northing: float,
@@ -105,130 +79,13 @@ def bin_to_utm(
     if not all(math.isfinite(value) for value in values):
         return None
 
+    heading_rad = math.radians(heading_deg)
+    forward_m = down_range
+    # Positive cross-range is port/left, so flip it into a conventional right axis.
     right_m = -cross_range
-    east_offset, north_offset = rotate_boat_offset_to_world(
-        forward_m=down_range,
-        right_m=right_m,
-        heading_deg=heading_deg,
-    )
+    east_offset = forward_m * math.sin(heading_rad) + right_m * math.cos(heading_rad)
+    north_offset = forward_m * math.cos(heading_rad) - right_m * math.sin(heading_rad)
     return boat_easting + east_offset, boat_northing + north_offset
-
-
-def extract_bottom_samples(message: nav_api_pb2.TargetData) -> list[BottomSample]:
-    boat_easting, boat_northing, _, _ = boat_position_to_utm(message)
-    heading_deg = message.heading.heading
-    samples: list[BottomSample] = []
-
-    for bottom_bin in message.bottom:
-        if not math.isfinite(bottom_bin.depth):
-            continue
-
-        utm_xy = bin_to_utm(
-            boat_easting,
-            boat_northing,
-            heading_deg,
-            bottom_bin.cross_range,
-            bottom_bin.down_range,
-        )
-        if utm_xy is None:
-            continue
-
-        samples.append(
-            BottomSample(
-                easting=utm_xy[0],
-                northing=utm_xy[1],
-                depth=bottom_bin.depth,
-            )
-        )
-
-    return samples
-
-
-def extract_target_samples(message: nav_api_pb2.TargetData) -> list[TargetSample]:
-    boat_easting, boat_northing, _, _ = boat_position_to_utm(message)
-    heading_deg = message.heading.heading
-    samples: list[TargetSample] = []
-
-    for group in message.groups:
-        for target_bin in group.bins:
-            if not math.isfinite(target_bin.strength):
-                continue
-
-            utm_xy = bin_to_utm(
-                boat_easting,
-                boat_northing,
-                heading_deg,
-                target_bin.cross_range,
-                target_bin.down_range,
-            )
-            if utm_xy is None:
-                continue
-
-            samples.append(
-                TargetSample(
-                    easting=utm_xy[0],
-                    northing=utm_xy[1],
-                    strength=target_bin.strength,
-                )
-            )
-
-    return samples
-
-
-def snap_bounds(
-    eastings: list[float],
-    northings: list[float],
-    resolution_m: float,
-) -> tuple[float, float, float, float]:
-    min_x = math.floor(min(eastings) / resolution_m) * resolution_m
-    min_y = math.floor(min(northings) / resolution_m) * resolution_m
-    max_x = math.ceil(max(eastings) / resolution_m) * resolution_m
-    max_y = math.ceil(max(northings) / resolution_m) * resolution_m
-    return min_x, min_y, max_x, max_y
-
-
-def rasterize_ping(
-    bottom_samples: list[BottomSample],
-    target_samples: list[TargetSample],
-    min_x: float,
-    min_y: float,
-    max_x: float,
-    max_y: float,
-    resolution_m: float,
-) -> tuple[np.ndarray, np.ndarray]:
-    width = int(round((max_x - min_x) / resolution_m))
-    height = int(round((max_y - min_y) / resolution_m))
-    depth_band = np.full((height, width), NODATA, dtype=np.float32)
-    signal_band = np.full((height, width), NODATA, dtype=np.float32)
-
-    for sample in bottom_samples:
-        col = int((sample.easting - min_x) / resolution_m)
-        row = int((max_y - sample.northing) / resolution_m)
-        if not (0 <= row < height and 0 <= col < width):
-            continue
-
-        value = -sample.depth
-        current = depth_band[row, col]
-        if current == NODATA or value > current:
-            depth_band[row, col] = value
-
-    for sample in target_samples:
-        col = int((sample.easting - min_x) / resolution_m)
-        row = int((max_y - sample.northing) / resolution_m)
-        if not (0 <= row < height and 0 <= col < width):
-            continue
-
-        current = signal_band[row, col]
-        if current == NODATA or sample.strength > current:
-            signal_band[row, col] = sample.strength
-
-    return depth_band, signal_band
-
-
-def utm_epsg(zone_number: int, zone_letter: str) -> int:
-    if zone_letter >= "N":
-        return 32600 + zone_number
-    return 32700 + zone_number
 
 
 def format_timestamp(message_time) -> str:
@@ -245,54 +102,19 @@ def format_timestamp(message_time) -> str:
     return dt.strftime("%Y%m%d_%H%M%S_%f")[:-3]
 
 
-def write_geotiff(
-    output_path: Path,
-    depth_band: np.ndarray,
-    signal_band: np.ndarray,
+def burn_max(
+    band: np.ndarray,
+    points: list[tuple[float, float, float]],
     min_x: float,
-    min_y: float,
-    max_x: float,
     max_y: float,
     resolution_m: float,
-    epsg: int,
-    message: nav_api_pb2.TargetData,
-    target_bin_count: int,
 ) -> None:
-    height, width = depth_band.shape
-    transform = from_bounds(min_x, min_y, max_x, max_y, width, height)
-    timestamp = format_timestamp(message.time)
-
-    tags = {
-        "TIMESTAMP_UTC": timestamp,
-        "SERIAL": message.serial,
-        "HEADING_DEG": f"{message.heading.heading:.6f}",
-        "LAT": f"{message.position.lat:.8f}",
-        "LON": f"{message.position.lon:.8f}",
-        "RESOLUTION_M": f"{resolution_m:g}",
-        "BOTTOM_BIN_COUNT": str(len(message.bottom)),
-        "TARGET_BIN_COUNT": str(target_bin_count),
-        "BAND1_DESCRIPTION": "bottom_depth_negative_down",
-        "BAND2_DESCRIPTION": "target_strength_db",
-    }
-
-    profile = {
-        "driver": "GTiff",
-        "dtype": "float32",
-        "count": 2,
-        "width": width,
-        "height": height,
-        "crs": CRS.from_epsg(epsg),
-        "transform": transform,
-        "nodata": NODATA,
-    }
-
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    with rasterio.open(output_path, "w", **profile) as dataset:
-        dataset.write(depth_band, 1)
-        dataset.write(signal_band, 2)
-        dataset.update_tags(**tags)
-        dataset.update_tags(1, BAND_NAME="bottom_depth")
-        dataset.update_tags(2, BAND_NAME="target_strength")
+    height, width = band.shape
+    for easting, northing, value in points:
+        col = min(width - 1, max(0, int((easting - min_x) / resolution_m)))
+        row = min(height - 1, max(0, int((max_y - northing) / resolution_m)))
+        if band[row, col] == NODATA or value > band[row, col]:
+            band[row, col] = value
 
 
 def write_ping_geotiff(
@@ -303,48 +125,98 @@ def write_ping_geotiff(
     if not has_valid_navigation(message):
         return None
 
-    bottom_samples = extract_bottom_samples(message)
-    target_samples = extract_target_samples(message)
-    if not bottom_samples and not target_samples:
+    boat_easting, boat_northing, zone_number, zone_letter = boat_position_to_utm(
+        message
+    )
+    heading_deg = message.heading.heading
+    bottom_points: list[tuple[float, float, float]] = []
+    target_points: list[tuple[float, float, float]] = []
+
+    for bottom_bin in message.bottom:
+        if not math.isfinite(bottom_bin.depth):
+            continue
+
+        xy = bin_to_utm(
+            boat_easting,
+            boat_northing,
+            heading_deg,
+            bottom_bin.cross_range,
+            bottom_bin.down_range,
+        )
+        if xy is not None:
+            bottom_points.append((xy[0], xy[1], -bottom_bin.depth))
+
+    for group in message.groups:
+        for target_bin in group.bins:
+            if not math.isfinite(target_bin.strength):
+                continue
+
+            xy = bin_to_utm(
+                boat_easting,
+                boat_northing,
+                heading_deg,
+                target_bin.cross_range,
+                target_bin.down_range,
+            )
+            if xy is not None:
+                target_points.append((xy[0], xy[1], target_bin.strength))
+
+    all_points = bottom_points + target_points
+    if not all_points:
         return None
 
-    all_eastings = [sample.easting for sample in bottom_samples] + [
-        sample.easting for sample in target_samples
-    ]
-    all_northings = [sample.northing for sample in bottom_samples] + [
-        sample.northing for sample in target_samples
-    ]
-    min_x, min_y, max_x, max_y = snap_bounds(all_eastings, all_northings, resolution_m)
+    eastings = [point[0] for point in all_points]
+    northings = [point[1] for point in all_points]
+    min_x = math.floor(min(eastings) / resolution_m) * resolution_m
+    min_y = math.floor(min(northings) / resolution_m) * resolution_m
+    max_x = math.ceil(max(eastings) / resolution_m) * resolution_m
+    max_y = math.ceil(max(northings) / resolution_m) * resolution_m
 
-    depth_band, signal_band = rasterize_ping(
-        bottom_samples,
-        target_samples,
-        min_x,
-        min_y,
-        max_x,
-        max_y,
-        resolution_m,
-    )
+    width = max(1, int(math.ceil((max_x - min_x) / resolution_m)))
+    height = max(1, int(math.ceil((max_y - min_y) / resolution_m)))
+    max_x = min_x + width * resolution_m
+    max_y = min_y + height * resolution_m
 
-    _, _, zone_number, zone_letter = boat_position_to_utm(message)
-    epsg = utm_epsg(zone_number, zone_letter)
+    depth_band = np.full((height, width), NODATA, dtype=np.float32)
+    signal_band = np.full((height, width), NODATA, dtype=np.float32)
+    burn_max(depth_band, bottom_points, min_x, max_y, resolution_m)
+    burn_max(signal_band, target_points, min_x, max_y, resolution_m)
+
     timestamp = format_timestamp(message.time)
     serial = message.serial or "unknown"
     output_path = output_dir / f"{timestamp}_{serial}.tif"
+    epsg = (32600 if zone_letter >= "N" else 32700) + zone_number
 
-    write_geotiff(
-        output_path=output_path,
-        depth_band=depth_band,
-        signal_band=signal_band,
-        min_x=min_x,
-        min_y=min_y,
-        max_x=max_x,
-        max_y=max_y,
-        resolution_m=resolution_m,
-        epsg=epsg,
-        message=message,
-        target_bin_count=len(target_samples),
-    )
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with rasterio.open(
+        output_path,
+        "w",
+        driver="GTiff",
+        dtype="float32",
+        count=2,
+        width=width,
+        height=height,
+        crs=CRS.from_epsg(epsg),
+        transform=from_origin(min_x, max_y, resolution_m, resolution_m),
+        nodata=NODATA,
+    ) as dataset:
+        dataset.write(depth_band, 1)
+        dataset.write(signal_band, 2)
+        dataset.update_tags(
+            TIMESTAMP_UTC=timestamp,
+            SERIAL=message.serial,
+            HEADING_DEG=f"{message.heading.heading:.6f}",
+            LAT=f"{message.position.lat:.8f}",
+            LON=f"{message.position.lon:.8f}",
+            RESOLUTION_M=f"{resolution_m:g}",
+            BOTTOM_SAMPLE_COUNT=str(len(bottom_points)),
+            TARGET_SAMPLE_COUNT=str(len(target_points)),
+            BAND1_DESCRIPTION="bottom_depth_positive_down",
+            BAND2_DESCRIPTION="target_strength_db",
+        )
+        dataset.update_tags(1, BAND_NAME="bottom_depth_meters_positive_down")
+        dataset.update_tags(2, BAND_NAME="target_strength_db")
+
     return output_path
 
 

@@ -5,7 +5,7 @@ QGIS, GDAL, or other GIS viewers.
 
 Each output file contains two bands:
 
-- Band 1: bottom depth from `message.bottom`, stored as negative-down values
+- Band 1: bottom depth from `message.bottom`
 - Band 2: target strength from `message.groups[].bins` only
 
 The example projects each ping into the UTM zone for the vessel position and
