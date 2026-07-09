@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import math
 import time
+from collections.abc import Iterator
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -16,6 +17,8 @@ from farsounder import config, subscriber
 from farsounder.proto import nav_api_pb2
 
 NODATA = -9999.0
+DEPTH_BAND_DESCRIPTION = "bottom_depth_meters_negative_down"
+SIGNAL_BAND_DESCRIPTION = "target_strength_db"
 
 
 def parse_args() -> argparse.Namespace:
@@ -109,6 +112,10 @@ def burn_max(
     max_y: float,
     resolution_m: float,
 ) -> None:
+    """Point in geo to pixel coords
+
+    Take max signal, and max depth (negative down) for overlaps.
+    """
     height, width = band.shape
     for easting, northing, value in points:
         col = min(width - 1, max(0, int((easting - min_x) / resolution_m)))
@@ -117,77 +124,94 @@ def burn_max(
             band[row, col] = value
 
 
-def write_ping_geotiff(
-    message: nav_api_pb2.TargetData,
-    output_dir: Path,
-    resolution_m: float,
-) -> Path | None:
-    if not has_valid_navigation(message):
-        return None
-
-    boat_easting, boat_northing, zone_number, zone_letter = boat_position_to_utm(
-        message
-    )
-    heading_deg = message.heading.heading
-    bottom_points: list[tuple[float, float, float]] = []
-    target_points: list[tuple[float, float, float]] = []
-
-    for bottom_bin in message.bottom:
-        if not math.isfinite(bottom_bin.depth):
+def iter_bottoms(message: nav_api_pb2.TargetData) -> Iterator[nav_api_pb2.Bin]:
+    for b in message.bottom:
+        if not math.isfinite(b.depth):
             continue
+        yield b
 
-        xy = bin_to_utm(
-            boat_easting,
-            boat_northing,
-            heading_deg,
-            bottom_bin.cross_range,
-            bottom_bin.down_range,
-        )
-        if xy is not None:
-            bottom_points.append((xy[0], xy[1], bottom_bin.depth))
 
-    for group in message.groups:
-        for target_bin in group.bins:
-            if not math.isfinite(target_bin.strength):
+def iter_targets(message: nav_api_pb2.TargetData) -> Iterator[nav_api_pb2.Bin]:
+    for g in message.groups:
+        for t in g.bins:
+            if not math.isfinite(t.strength):
                 continue
+            yield t
 
-            xy = bin_to_utm(
-                boat_easting,
-                boat_northing,
-                heading_deg,
-                target_bin.cross_range,
-                target_bin.down_range,
-            )
-            if xy is not None:
-                target_points.append((xy[0], xy[1], target_bin.strength))
 
-    all_points = bottom_points + target_points
-    if not all_points:
-        return None
-
-    eastings = [point[0] for point in all_points]
-    northings = [point[1] for point in all_points]
+def get_bounding_box(
+    points: list[tuple[float, float, float]],
+    resolution_m: float,
+) -> tuple[float, float, float, float]:
+    eastings = [point[0] for point in points]
+    northings = [point[1] for point in points]
     min_x = math.floor(min(eastings) / resolution_m) * resolution_m
     min_y = math.floor(min(northings) / resolution_m) * resolution_m
     max_x = math.ceil(max(eastings) / resolution_m) * resolution_m
     max_y = math.ceil(max(northings) / resolution_m) * resolution_m
+    return min_x, min_y, max_x, max_y
 
+
+def get_width_height(
+    min_x: float,
+    min_y: float,
+    max_x: float,
+    max_y: float,
+    resolution_m: float,
+) -> tuple[int, int]:
     width = max(1, int(math.ceil((max_x - min_x) / resolution_m)))
     height = max(1, int(math.ceil((max_y - min_y) / resolution_m)))
-    max_x = min_x + width * resolution_m
+    return width, height
+
+
+def write_ping_geotiff(
+    td: nav_api_pb2.TargetData,
+    output_dir: Path,
+    resolution_m: float,
+) -> Path | None:
+    if not has_valid_navigation(td):
+        return None
+
+    # boat heading in degrees and position - to get detections placed
+    heading = td.heading.heading
+
+    easting, northing, zone_number, zone_letter = boat_position_to_utm(td)
+
+    # detections are relative to the transducer position, need to map to common
+    # reference system
+    bottom_points: list[tuple[float, float, float]] = []
+    for b in iter_bottoms(td):
+        if xy := bin_to_utm(easting, northing, heading, b.cross_range, b.down_range):
+            bottom_points.append((*xy, b.depth))
+
+    target_points: list[tuple[float, float, float]] = []
+    for t in iter_targets(td):
+        if xy := bin_to_utm(easting, northing, heading, t.cross_range, t.down_range):
+            target_points.append((*xy, t.strength))
+
+    if not (bottom_points or target_points):
+        return None
+
+    # raster size and bounds
+    min_x, min_y, max_x, max_y = get_bounding_box(
+        bottom_points + target_points, resolution_m
+    )
+    width, height = get_width_height(min_x, min_y, max_x, max_y, resolution_m)
     max_y = min_y + height * resolution_m
 
+    # burn points to bands
     depth_band = np.full((height, width), NODATA, dtype=np.float32)
     signal_band = np.full((height, width), NODATA, dtype=np.float32)
     burn_max(depth_band, bottom_points, min_x, max_y, resolution_m)
     burn_max(signal_band, target_points, min_x, max_y, resolution_m)
 
-    timestamp = format_timestamp(message.time)
-    serial = message.serial or "unknown"
+    # other metadata
+    timestamp = format_timestamp(td.time)
+    serial = td.serial or "unknown"
+    max_range = td.grid_description.max_range
+
     output_path = output_dir / f"{timestamp}_{serial}.tif"
     epsg = (32600 if zone_letter >= "N" else 32700) + zone_number
-    max_range = message.grid_description.max_range
-
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with rasterio.open(
         output_path,
@@ -206,19 +230,20 @@ def write_ping_geotiff(
         dataset.update_tags(
             PROVIDER="SonaSoft",
             TIMESTAMP_UTC=timestamp,
-            SERIAL=message.serial,
-            VESSEL_HEADING_DEG=f"{message.heading.heading:.6f}",
-            VESSEL_LAT_DEG=f"{message.position.lat:.8f}",
-            VESSEL_LON_DEG=f"{message.position.lon:.8f}",
+            SERIAL=serial,
+            VESSEL_HEADING_DEG=f"{heading:.6f}",
+            VESSEL_LAT_DEG=f"{td.position.lat:.8f}",
+            VESSEL_LON_DEG=f"{td.position.lon:.8f}",
             CELL_SIZE_METERS=f"{resolution_m:g}",
             BOTTOM_SAMPLE_COUNT=str(len(bottom_points)),
             TARGET_SAMPLE_COUNT=str(len(target_points)),
-            BAND1_DESCRIPTION="bottom_depth_negative_down",
-            BAND2_DESCRIPTION="target_strength_db",
+            BAND1_DESCRIPTION=DEPTH_BAND_DESCRIPTION,
+            BAND2_DESCRIPTION=SIGNAL_BAND_DESCRIPTION,
             LOOK_AHEAD_RANGE_METERS=f"{max_range:.6f}",
+            NOTES="Depth relative to transducer, negative down.",
         )
-        dataset.update_tags(1, BAND_NAME="bottom_depth_meters_negative_down")
-        dataset.update_tags(2, BAND_NAME="target_strength_db")
+        dataset.update_tags(1, BAND_NAME=DEPTH_BAND_DESCRIPTION)
+        dataset.update_tags(2, BAND_NAME=SIGNAL_BAND_DESCRIPTION)
 
     return output_path
 
