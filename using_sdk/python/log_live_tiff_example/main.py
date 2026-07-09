@@ -186,6 +186,7 @@ def write_ping_geotiff(
     serial = message.serial or "unknown"
     output_path = output_dir / f"{timestamp}_{serial}.tif"
     epsg = (32600 if zone_letter >= "N" else 32700) + zone_number
+    max_range = message.grid_description.max_range
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with rasterio.open(
@@ -203,16 +204,18 @@ def write_ping_geotiff(
         dataset.write(depth_band, 1)
         dataset.write(signal_band, 2)
         dataset.update_tags(
+            PROVIDER="SonaSoft",
             TIMESTAMP_UTC=timestamp,
             SERIAL=message.serial,
-            HEADING_DEG=f"{message.heading.heading:.6f}",
-            LAT=f"{message.position.lat:.8f}",
-            LON=f"{message.position.lon:.8f}",
-            RESOLUTION_M=f"{resolution_m:g}",
+            VESSEL_HEADING_DEG=f"{message.heading.heading:.6f}",
+            VESSEL_LAT_DEG=f"{message.position.lat:.8f}",
+            VESSEL_LON_DEG=f"{message.position.lon:.8f}",
+            CELL_SIZE_METERS=f"{resolution_m:g}",
             BOTTOM_SAMPLE_COUNT=str(len(bottom_points)),
             TARGET_SAMPLE_COUNT=str(len(target_points)),
             BAND1_DESCRIPTION="bottom_depth_positive_down",
             BAND2_DESCRIPTION="target_strength_db",
+            LOOK_AHEAD_RANGE_METERS=f"{max_range:.6f}",
         )
         dataset.update_tags(1, BAND_NAME="bottom_depth_meters_positive_down")
         dataset.update_tags(2, BAND_NAME="target_strength_db")
