@@ -144,7 +144,7 @@ def write_ping_geotiff(
             bottom_bin.down_range,
         )
         if xy is not None:
-            bottom_points.append((xy[0], xy[1], -bottom_bin.depth))
+            bottom_points.append((xy[0], xy[1], bottom_bin.depth))
 
     for group in message.groups:
         for target_bin in group.bins:
@@ -213,11 +213,11 @@ def write_ping_geotiff(
             CELL_SIZE_METERS=f"{resolution_m:g}",
             BOTTOM_SAMPLE_COUNT=str(len(bottom_points)),
             TARGET_SAMPLE_COUNT=str(len(target_points)),
-            BAND1_DESCRIPTION="bottom_depth_positive_down",
+            BAND1_DESCRIPTION="bottom_depth_negative_down",
             BAND2_DESCRIPTION="target_strength_db",
             LOOK_AHEAD_RANGE_METERS=f"{max_range:.6f}",
         )
-        dataset.update_tags(1, BAND_NAME="bottom_depth_meters_positive_down")
+        dataset.update_tags(1, BAND_NAME="bottom_depth_meters_negative_down")
         dataset.update_tags(2, BAND_NAME="target_strength_db")
 
     return output_path
