@@ -15,34 +15,7 @@ writes the correct projected CRS into the GeoTIFF metadata.
 
 ```bash
 uv sync
-uv run main.py
-```
-
-Common options:
-
-```bash
-uv run main.py 192.168.1.10 --seconds 30 --output-dir output --resolution-m 2
-```
-
-- `host`: SonaSoft host (default `127.0.0.1`)
-- `--seconds`: how long to listen for pings (default `5`)
-- `--output-dir`: where to write `.tif` files (default `output`)
-- `--resolution-m`: raster cell size in meters (default `1`)
-
-Output files are named like `YYYYMMDD_HHMMSS_mmm_<serial>.tif`.
-
-## Inspect Output
-
-With GDAL:
-
-```bash
-gdalinfo output/<file>.tif
-```
-
-With Python:
-
-```bash
-uv run python -c "import rasterio; ds=rasterio.open('output/<file>.tif'); print(ds.crs, ds.transform, ds.tags())"
+uv run main.py # -h for args
 ```
 
 To run without `uv`, install the dependencies from `pyproject.toml` and use:
