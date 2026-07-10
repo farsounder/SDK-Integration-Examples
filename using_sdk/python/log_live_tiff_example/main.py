@@ -12,6 +12,7 @@ import rasterio
 import utm
 from rasterio.crs import CRS
 from rasterio.transform import from_origin
+from scipy.ndimage import binary_closing, binary_fill_holes, distance_transform_edt
 
 from farsounder import config, subscriber
 from farsounder.proto import nav_api_pb2
@@ -164,6 +165,24 @@ def get_width_height(
     return width, height
 
 
+def fill_holes_with_nearest_neighbor(
+    band: np.ndarray,
+    structure: tuple[int, int] = (3, 3),
+) -> np.ndarray:
+    valid = band != NODATA
+
+    closed = binary_closing(valid, structure=np.ones(structure, dtype=bool))
+    filled = binary_fill_holes(closed)
+
+    new_pixels = filled & ~valid
+
+    _, nn_indices = distance_transform_edt(~valid, return_indices=True)
+
+    band[new_pixels] = band[tuple(nn_indices[:, new_pixels])]
+
+    return band
+
+
 def write_ping_geotiff(
     td: nav_api_pb2.TargetData,
     output_dir: Path,
@@ -204,6 +223,10 @@ def write_ping_geotiff(
     signal_band = np.full((height, width), NODATA, dtype=np.float32)
     burn_max(depth_band, bottom_points, min_x, max_y, resolution_m)
     burn_max(signal_band, target_points, min_x, max_y, resolution_m)
+
+    # at longer range the beam space points are sparse in pixel space, this
+    # fills in some of the small holes to get a representative area
+    signal_band = fill_holes_with_nearest_neighbor(signal_band, structure=(3, 3))
 
     # other metadata
     timestamp = format_timestamp(td.time)
