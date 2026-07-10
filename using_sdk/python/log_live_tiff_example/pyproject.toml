@@ -1,0 +1,13 @@
+[project]
+name = "log-live-tiff-example"
+version = "0.1.0"
+description = "Subscribe to TargetData and write per-ping GeoTIFF files"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "farsounder>=0.1.1",
+    "numpy>=2.2.0",
+    "rasterio>=1.4.3",
+    "scipy>=1.18.0",
+    "utm>=0.8.1",
+]
