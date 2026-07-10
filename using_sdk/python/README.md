@@ -9,6 +9,7 @@ package instead of managing ZeroMQ and protobuf directly.
   pub/sub subscription flow.
 - `drawing_example/` is a larger visualization example that subscribes to live
   data and renders it with `rerun`.
+- `log_live_tiff_example/` dumps each ping as a geotiff with a band for bottom depths and band for target
 
 The Python SDK repo is
 [farsounder-python-client](https://github.com/farsounder/farsounder-python-client).
