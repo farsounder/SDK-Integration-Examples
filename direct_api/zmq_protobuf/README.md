@@ -5,6 +5,12 @@ These examples keep the transport visible on purpose:
 - request/reply via `GetProcessorSettings`
 - pub/sub via `TargetData`
 
+## Examples
+
+- [`cpp/`](cpp/) for C++
+- [`csharp/`](csharp/) for C# on .NET
+- [`python/`](python/) for Python
+
 ## Default Ports
 
 See `proto/nav_api.proto` for the authoritative list and for detailed comments on each message and its conventions.

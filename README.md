@@ -23,6 +23,7 @@ If you want to integrate with the APIs directly for full control of receive
 threading, etc:
 
 - `direct_api/zmq_protobuf/cpp/`
+- `direct_api/zmq_protobuf/csharp/`
 - `direct_api/zmq_protobuf/python/`
 - For the direct JSON API, there are interactive Swagger docs at `http://localhost:3000/docs` when the SonaSoft demo is running
 
