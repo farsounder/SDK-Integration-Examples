@@ -4,6 +4,7 @@ These examples connect to SonaSoft without the higher-level SDK clients.
 
 Choose a path:
 - `zmq_protobuf/cpp/` for a cross-platform C++ request/reply plus pub/sub example
+- `zmq_protobuf/csharp/` for a .NET C# request/reply plus pub/sub example
 - `zmq_protobuf/python/` for a Python request/reply plus pub/sub example
 
 If you are troubleshooting your environment first, start in
